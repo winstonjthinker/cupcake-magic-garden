@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,20 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				cupcake: {
+					blue: '#A5D8FF',
+					pink: '#FFD6E0',
+					darkPink: '#FF9FB5',
+					darkBlue: '#7CC3FF',
+					cream: '#FFF9F0',
+					brown: '#8B5A2B',
+					green: '#25D366',
+				},
+			},
+			fontFamily: {
+				'pacifico': ['Pacifico', 'cursive'],
+				'poppins': ['Poppins', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -70,25 +84,54 @@ export default {
 			},
 			keyframes: {
 				'accordion-down': {
-					from: {
-						height: '0'
-					},
-					to: {
-						height: 'var(--radix-accordion-content-height)'
-					}
+					from: { height: '0' },
+					to: { height: 'var(--radix-accordion-content-height)' }
 				},
 				'accordion-up': {
-					from: {
-						height: 'var(--radix-accordion-content-height)'
-					},
-					to: {
-						height: '0'
-					}
+					from: { height: 'var(--radix-accordion-content-height)' },
+					to: { height: '0' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
+				},
+				'bounce-light': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-5px)' }
+				},
+				'rotate-slow': {
+					'0%': { transform: 'rotate(0deg)' },
+					'100%': { transform: 'rotate(360deg)' }
+				},
+				'pulse-light': {
+					'0%, 100%': { opacity: '1' },
+					'50%': { opacity: '0.8' }
+				},
+				'wave': {
+					'0%': { transform: 'translateX(0)' },
+					'50%': { transform: 'translateX(-10px)' },
+					'100%': { transform: 'translateX(0)' }
+				},
+				'sprinkle-fall': {
+					'0%': { transform: 'translateY(-10px)', opacity: '0' },
+					'50%': { opacity: '1' },
+					'100%': { transform: 'translateY(60px)', opacity: '0' }
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 5px rgba(165, 216, 255, 0.6)' },
+					'50%': { boxShadow: '0 0 15px rgba(165, 216, 255, 0.8)' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'float': 'float 5s ease-in-out infinite',
+				'bounce-light': 'bounce-light 2s ease-in-out infinite',
+				'rotate-slow': 'rotate-slow 12s linear infinite',
+				'pulse-light': 'pulse-light 2s ease-in-out infinite',
+				'wave': 'wave 3s ease-in-out infinite',
+				'sprinkle-fall': 'sprinkle-fall 3s linear infinite',
+				'glow': 'glow 2s ease-in-out infinite'
 			}
 		}
 	},
