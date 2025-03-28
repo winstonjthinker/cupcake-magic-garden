@@ -1,0 +1,44 @@
+
+@layer components {
+  /* Button animations */
+  .whatsapp-btn {
+    transition: all 0.3s ease;
+  }
+  
+  .whatsapp-btn:hover {
+    filter: brightness(1.1);
+    transform: scale(1.05);
+  }
+  
+  .instagram-btn {
+    transition: all 0.3s ease;
+  }
+  
+  .instagram-btn:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 0 10px rgba(255, 159, 181, 0.5);
+  }
+  
+  /* Navigation link animations */
+  .nav-link {
+    position: relative;
+  }
+  
+  .nav-link:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: #A5D8FF;
+    transform-origin: bottom right;
+    transition: transform 0.25s ease-out;
+  }
+  
+  .nav-link:hover:after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+}

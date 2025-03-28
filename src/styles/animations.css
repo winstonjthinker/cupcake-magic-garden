@@ -1,0 +1,126 @@
+
+@layer utilities {
+  /* Sprinkle animation */
+  .cupcake-sprinkle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    animation: sprinkle-fall 3s linear infinite;
+    animation-delay: calc(var(--delay) * 0.5s);
+    opacity: 0;
+  }
+  
+  @keyframes sprinkle-fall {
+    0% {
+      transform: translateY(-20px) rotate(0deg);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(100vh) rotate(360deg);
+      opacity: 0;
+    }
+  }
+  
+  /* Page transition animations */
+  .page-enter {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  
+  .page-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 400ms, transform 400ms;
+  }
+  
+  .page-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .page-exit-active {
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 300ms, transform 300ms;
+  }
+  
+  /* Jelly bounce effect */
+  @keyframes jelly-bounce {
+    0%, 100% { transform: scale(1); }
+    30% { transform: scale(1.05); }
+    40% { transform: scale(0.95); }
+    50% { transform: scale(1.05); }
+    60% { transform: scale(0.98); }
+    70% { transform: scale(1.02); }
+    80% { transform: scale(1); }
+  }
+  
+  .animate-jelly-bounce:hover {
+    animation: jelly-bounce 0.8s ease;
+  }
+  
+  /* Float animation */
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  /* Light bounce animation */
+  @keyframes bounce-light {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  
+  .animate-bounce-light {
+    animation: bounce-light 2s ease-in-out infinite;
+  }
+  
+  /* Pulse light animation */
+  @keyframes pulse-light {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+  
+  .animate-pulse-light {
+    animation: pulse-light 2s ease-in-out infinite;
+  }
+  
+  /* Pulse slow animation */
+  @keyframes pulse-slow {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+  
+  /* Horizontal bounce animation */
+  @keyframes bounce-horizontal {
+    0%, 100% { transform: translateX(0); }
+    50% { transform: translateX(3px); }
+  }
+  
+  .animate-bounce-horizontal {
+    animation: bounce-horizontal 1s ease-in-out infinite;
+  }
+  
+  /* Fade-in animation */
+  @keyframes fade-in {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.6s ease-out forwards;
+  }
+}

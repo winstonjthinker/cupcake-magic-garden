@@ -1,4 +1,6 @@
 
+import "../../styles/confetti.css";
+
 export const showConfetti = () => {
   const confettiCount = 100;
   const colors = ['#FFD6E0', '#A5D8FF', '#FFC107', '#FF9FB5'];
