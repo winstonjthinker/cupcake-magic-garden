@@ -225,7 +225,8 @@ const Hero = () => {
       </div>
       
       {/* Add CSS for the steam effect and heart particles */}
-      <style jsx>{`
+      <style>
+        {`
         @keyframes steam {
           0% { transform: translateY(0) translateX(-50%) scale(1); opacity: 0.3; }
           100% { transform: translateY(-15px) translateX(-50%) scale(1.5); opacity: 0; }
@@ -261,7 +262,8 @@ const Hero = () => {
           0% { transform: translateY(0) rotate(0deg); }
           100% { transform: translateY(100vh) rotate(360deg); }
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
