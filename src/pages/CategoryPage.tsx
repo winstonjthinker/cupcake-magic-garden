@@ -1,12 +1,13 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import EnhancedProductCard from '@/components/EnhancedProductCard';
 import { ChevronLeft, CakeSlice, Cake, IceCream, Cookie } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
-// Sample data for each category
+// This will serve as fallback data if the database fetch fails
 const categoryData = {
   cupcakes: {
     title: "Cupcakes",
@@ -212,13 +213,70 @@ const categoryData = {
 
 const CategoryPage = () => {
   const { categoryId } = useParams();
-  const category = categoryId && categoryData[categoryId as keyof typeof categoryData];
+  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState<any>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
+    const fetchCategoryData = async () => {
+      setLoading(true);
+      
+      try {
+        // Fetch the category from Supabase
+        const { data: categoryData, error: categoryError } = await supabase
+          .from('categories')
+          .select('*')
+          .eq('name', categoryId)
+          .maybeSingle();
+        
+        if (categoryError) {
+          console.error('Error fetching category:', categoryError);
+          // Fall back to static data
+          setCategory(categoryId && categoryData[categoryId as keyof typeof categoryData]);
+          setProducts(categoryId && categoryData[categoryId as keyof typeof categoryData]?.products || []);
+        } else if (categoryData) {
+          setCategory(categoryData);
+          
+          // Fetch products for this category
+          const { data: productsData, error: productsError } = await supabase
+            .from('products')
+            .select('*')
+            .eq('category_id', categoryData.id);
+          
+          if (productsError) {
+            console.error('Error fetching products:', productsError);
+            // Fall back to static data
+            setProducts(categoryId && categoryData[categoryId as keyof typeof categoryData]?.products || []);
+          } else {
+            setProducts(productsData || []);
+          }
+        } else {
+          // Fall back to static data if no category found in database
+          setCategory(categoryId && categoryData[categoryId as keyof typeof categoryData]);
+          setProducts(categoryId && categoryData[categoryId as keyof typeof categoryData]?.products || []);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load category data. Using static data instead.",
+          variant: "destructive"
+        });
+        // Fall back to static data
+        setCategory(categoryId && categoryData[categoryId as keyof typeof categoryData]);
+        setProducts(categoryId && categoryData[categoryId as keyof typeof categoryData]?.products || []);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
     
-    // Add some confetti effect on page load
+    fetchCategoryData();
+    
+    // Add confetti effect
     const confettiCount = 30;
     const colors = ['#FFD6E0', '#A5D8FF', '#FFC107', '#FF9FB5'];
     
@@ -259,9 +317,10 @@ const CategoryPage = () => {
         document.body.removeChild(confettiContainer);
       }
     };
-  }, [categoryId]);
+  }, [categoryId, toast]);
 
-  if (!category) {
+  // If no category found, show error
+  if (!category && !loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
@@ -273,13 +332,62 @@ const CategoryPage = () => {
     );
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-xl text-gray-600">Loading...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Determine which icon to show based on category
+  const getCategoryIcon = () => {
+    if (!categoryId) return <CakeSlice className="text-cupcake-darkPink animate-bounce-light" size={28} />;
+    
+    switch(categoryId) {
+      case 'cupcakes':
+        return <CakeSlice className="text-cupcake-darkPink animate-bounce-light" size={28} />;
+      case 'cakes':
+        return <Cake className="text-cupcake-darkBlue animate-bounce-light" size={28} />;
+      case 'cakesicles':
+        return <IceCream className="text-purple-700 animate-bounce-light" size={28} />;
+      case 'sweet-treats':
+        return <Cookie className="text-amber-600 animate-bounce-light" size={28} />;
+      default:
+        return <CakeSlice className="text-cupcake-darkPink animate-bounce-light" size={28} />;
+    }
+  };
+  
+  // Determine gradient color based on category
+  const getCategoryColor = () => {
+    if (!categoryId) return "from-cupcake-pink to-cupcake-darkPink";
+    
+    switch(categoryId) {
+      case 'cupcakes':
+        return "from-cupcake-pink to-cupcake-darkPink";
+      case 'cakes':
+        return "from-cupcake-blue to-cupcake-darkBlue";
+      case 'cakesicles':
+        return "from-purple-300 to-purple-700";
+      case 'sweet-treats':
+        return "from-amber-300 to-amber-700";
+      default:
+        return "from-cupcake-pink to-cupcake-darkPink";
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col page-enter page-enter-active">
       <Navbar />
       
       <main className="flex-1 pt-24">
         {/* Hero Section */}
-        <div className={`bg-gradient-to-b ${category.color} py-12`}>
+        <div className={`bg-gradient-to-b ${getCategoryColor()} py-12`}>
           <div className="container mx-auto px-4">
             <Link 
               to="/" 
@@ -290,27 +398,33 @@ const CategoryPage = () => {
             </Link>
             
             <div className="flex items-center gap-3 mb-4">
-              {category.icon}
-              <h1 className="text-4xl md:text-5xl font-pacifico text-white">{category.title}</h1>
+              {getCategoryIcon()}
+              <h1 className="text-4xl md:text-5xl font-pacifico text-white">{category.name || categoryId}</h1>
             </div>
-            <p className="text-white/90 max-w-2xl text-lg">{category.description}</p>
+            <p className="text-white/90 max-w-2xl text-lg">{category.description || ""}</p>
           </div>
         </div>
         
         {/* Products Grid */}
         <div className="container mx-auto px-4 py-12">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {category.products.map((product, index) => (
-              <EnhancedProductCard
-                key={product.id}
-                image={product.image}
-                title={product.title}
-                description={product.description}
-                price={product.price}
-                delayAnimation={index}
-              />
-            ))}
-          </div>
+          {products.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {products.map((product, index) => (
+                <EnhancedProductCard
+                  key={product.id}
+                  image={product.image_url || `https://source.unsplash.com/random/300x300/?${product.name.replace(/\s+/g, '-').toLowerCase()}`}
+                  title={product.name}
+                  description={product.description || ""}
+                  price={`$${parseFloat(product.price).toFixed(2)}`}
+                  delayAnimation={index}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No products found for this category.</p>
+            </div>
+          )}
           
           {/* Bulk order notice for cakesicles */}
           {categoryId === 'cakesicles' && (
