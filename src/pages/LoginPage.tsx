@@ -32,7 +32,6 @@ const LoginPage = () => {
     const loginContainer = document.getElementById('login-container');
     
     if (loginContainer) {
-      const colors = ['#FFD6E0', '#A5D8FF', '#FFC107', '#FF9FB5'];
       const shapes = ['🧁', '🍰', '🎂', '🍪'];
       
       for (let i = 0; i < floatingElementsCount; i++) {
@@ -66,21 +65,6 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      // Get the admin user with the provided email
-      const { data: adminUser, error: fetchError } = await supabase
-        .from('admin_users')
-        .select('*')
-        .eq('email', email.trim())
-        .maybeSingle();
-      
-      if (fetchError) {
-        throw fetchError;
-      }
-      
-      if (!adminUser) {
-        throw new Error('Invalid email or password');
-      }
-      
       // Verify password using pgcrypto on Supabase
       const { data: authResult, error: authError } = await supabase.rpc('verify_admin_password', {
         email_input: email.trim(),
