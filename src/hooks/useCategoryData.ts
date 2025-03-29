@@ -9,13 +9,12 @@ interface Product {
   id: string | number;
   name: string;
   description?: string;
-  price: number;
+  // Make price property handle both number and string types
+  price: number | string;
   price_raw?: number;
   image_url?: string;
   title?: string;
   image?: string;
-  // Adding string as an alternative type for price to handle static data
-  price?: string;
 }
 
 interface Category {
