@@ -66,24 +66,32 @@ const LoginPage = () => {
     setIsLoading(true);
     
     try {
-      // Try to find the admin user with the provided email
-      const { data, error } = await supabase
+      // Get the admin user with the provided email
+      const { data: adminUser, error: fetchError } = await supabase
         .from('admin_users')
         .select('*')
         .eq('email', email.trim())
         .maybeSingle();
       
-      if (error) {
-        throw error;
+      if (fetchError) {
+        throw fetchError;
       }
       
-      if (!data) {
-        // Admin user not found
+      if (!adminUser) {
         throw new Error('Invalid email or password');
       }
       
-      // Check password (in a real app, this would be properly hashed and compared)
-      if (data.password !== password) {
+      // Verify password using pgcrypto on Supabase
+      const { data: authResult, error: authError } = await supabase.rpc('verify_admin_password', {
+        email_input: email.trim(),
+        password_input: password
+      });
+      
+      if (authError) {
+        throw authError;
+      }
+      
+      if (!authResult) {
         throw new Error('Invalid email or password');
       }
       
