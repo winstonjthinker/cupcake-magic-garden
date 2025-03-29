@@ -6,36 +6,85 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, Package, DollarSign, Users, ShoppingBag, Cake, BarChart } from 'lucide-react';
+import { 
+  LogOut, 
+  Package, 
+  DollarSign, 
+  Users, 
+  ShoppingBag, 
+  Cake, 
+  BarChart,
+  FileText,
+  UserCog
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import ProductManagement from '@/components/admin/ProductManagement';
+import BlogManagement from '@/components/admin/BlogManagement';
+import AdminUserManagement from '@/components/admin/AdminUserManagement';
 
 const AdminPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(true);
   
   useEffect(() => {
-    // Check if user is logged in
-    const isAdminLoggedIn = localStorage.getItem('isAdminLoggedIn') === 'true';
+    const checkAuth = async () => {
+      setIsAuthenticating(true);
+      
+      try {
+        // Check if user is logged in with stored credentials
+        const storedEmail = localStorage.getItem('adminEmail');
+        
+        if (!storedEmail) {
+          // No stored credentials, redirect to login
+          redirectToLogin("Please login to access the admin dashboard");
+          return;
+        }
+        
+        // Verify the admin user exists in the database
+        const { data, error } = await supabase
+          .from('admin_users')
+          .select('email')
+          .eq('email', storedEmail)
+          .maybeSingle();
+        
+        if (error || !data) {
+          // Invalid stored credentials, redirect to login
+          localStorage.removeItem('adminEmail');
+          redirectToLogin("Invalid admin credentials. Please login again.");
+          return;
+        }
+        
+        // Admin is authenticated
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Authentication check error:", error);
+        redirectToLogin("Authentication error. Please try again.");
+      } finally {
+        setIsAuthenticating(false);
+      }
+    };
     
-    if (!isAdminLoggedIn) {
+    const redirectToLogin = (message: string) => {
       toast({
         title: "Authentication required",
-        description: "Please login to access the admin dashboard",
+        description: message,
         variant: "destructive",
         duration: 3000,
       });
       navigate('/login');
-      return;
-    }
+    };
     
-    setIsAuthenticated(true);
+    checkAuth();
     
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
   }, [navigate, toast]);
   
   const handleLogout = () => {
+    localStorage.removeItem('adminEmail');
     localStorage.removeItem('isAdminLoggedIn');
     
     toast({
@@ -46,6 +95,15 @@ const AdminPage = () => {
     
     navigate('/');
   };
+  
+  if (isAuthenticating) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cupcake-darkPink"></div>
+        <p className="mt-4 text-gray-600">Verifying admin access...</p>
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return null; // Don't render anything while checking authentication
@@ -124,13 +182,19 @@ const AdminPage = () => {
           </div>
           
           {/* Tabs */}
-          <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="grid grid-cols-3 w-full max-w-md mx-auto mb-6">
+          <Tabs defaultValue="products" className="w-full">
+            <TabsList className="grid grid-cols-5 w-full max-w-3xl mx-auto mb-6">
               <TabsTrigger value="orders" className="data-[state=active]:bg-cupcake-pink/20 data-[state=active]:text-cupcake-darkPink">
                 <ShoppingBag className="w-4 h-4 mr-2" /> Orders
               </TabsTrigger>
               <TabsTrigger value="products" className="data-[state=active]:bg-cupcake-blue/20 data-[state=active]:text-cupcake-darkBlue">
                 <Cake className="w-4 h-4 mr-2" /> Products
+              </TabsTrigger>
+              <TabsTrigger value="blog" className="data-[state=active]:bg-green-100 data-[state=active]:text-green-700">
+                <FileText className="w-4 h-4 mr-2" /> Blog
+              </TabsTrigger>
+              <TabsTrigger value="admin" className="data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700">
+                <UserCog className="w-4 h-4 mr-2" /> Admins
               </TabsTrigger>
               <TabsTrigger value="analytics" className="data-[state=active]:bg-purple-100 data-[state=active]:text-purple-700">
                 <BarChart className="w-4 h-4 mr-2" /> Analytics
@@ -190,10 +254,29 @@ const AdminPage = () => {
                   <CardTitle>Product Management</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">Product management features coming soon!</p>
-                    <Button className="bg-cupcake-darkBlue hover:bg-blue-700">Add New Product</Button>
-                  </div>
+                  <ProductManagement />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="blog" className="animate-fade-in">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Blog Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BlogManagement />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="admin" className="animate-fade-in">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Admin User Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AdminUserManagement />
                 </CardContent>
               </Card>
             </TabsContent>

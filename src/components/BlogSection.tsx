@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Calendar, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const articles = [
   {
@@ -66,24 +67,24 @@ const BlogSection = () => {
                   {article.excerpt}
                 </p>
                 
-                <a 
-                  href="#" 
+                <Link
+                  to={`/blog/${article.id}`}
                   className="inline-flex items-center text-cupcake-darkBlue font-medium hover:text-cupcake-blue transition-colors"
                 >
                   Read More <ChevronRight className="ml-1 h-4 w-4" />
-                </a>
+                </Link>
               </div>
             </div>
           ))}
         </div>
         
         <div className="text-center mt-10">
-          <a 
-            href="#" 
+          <Link
+            to="/blog"
             className="inline-flex items-center text-cupcake-darkPink font-semibold hover:text-cupcake-pink transition-colors border-b-2 border-cupcake-pink pb-1"
           >
             View All Articles <ChevronRight className="ml-1 h-4 w-4" />
-          </a>
+          </Link>
         </div>
       </div>
     </section>

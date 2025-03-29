@@ -1,11 +1,62 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Instagram, Send, Facebook, Twitter } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 const ContactSection = () => {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    subject: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Here we would typically send the data to a backend API
+      // For demo purposes, we'll just simulate a successful submission
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      toast({
+        title: "Message Sent!",
+        description: "Thank you for reaching out. We'll get back to you soon!",
+        duration: 5000,
+      });
+
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      });
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error sending your message. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section id="contact" className="py-16 bg-white relative overflow-hidden">
       {/* Decorative floating cupcake */}
@@ -28,7 +79,7 @@ const ContactSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
           <div>
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Send Us a Message</h3>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
@@ -36,6 +87,9 @@ const ContactSection = () => {
                     id="name" 
                     placeholder="Your name" 
                     className="border-cupcake-blue/50 focus:border-cupcake-blue focus:ring focus:ring-cupcake-blue/20"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
                 <div>
@@ -45,6 +99,9 @@ const ContactSection = () => {
                     type="email" 
                     placeholder="Your email" 
                     className="border-cupcake-blue/50 focus:border-cupcake-blue focus:ring focus:ring-cupcake-blue/20"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
                   />
                 </div>
               </div>
@@ -54,6 +111,9 @@ const ContactSection = () => {
                   id="subject" 
                   placeholder="Message subject" 
                   className="border-cupcake-blue/50 focus:border-cupcake-blue focus:ring focus:ring-cupcake-blue/20"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  required
                 />
               </div>
               <div>
@@ -63,9 +123,18 @@ const ContactSection = () => {
                   placeholder="Your message" 
                   rows={5}
                   className="border-cupcake-blue/50 focus:border-cupcake-blue focus:ring focus:ring-cupcake-blue/20"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
                 />
               </div>
-              <Button className="bg-cupcake-darkPink hover:bg-cupcake-pink w-full">Send Message</Button>
+              <Button 
+                type="submit" 
+                className="bg-cupcake-darkPink hover:bg-cupcake-pink w-full" 
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Sending...' : 'Send Message'}
+              </Button>
             </form>
           </div>
           

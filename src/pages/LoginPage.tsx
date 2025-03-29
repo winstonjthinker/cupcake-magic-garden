@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, User, ArrowRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -16,11 +17,13 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Admin credentials for demo (in a real app, this would be handled by a backend)
-  const ADMIN_EMAIL = 'admin@lakeishascupcakery.com';
-  const ADMIN_PASSWORD = 'admin123';
-
   useEffect(() => {
+    // Check if already logged in
+    const adminEmail = localStorage.getItem('adminEmail');
+    if (adminEmail) {
+      navigate('/admin');
+    }
+    
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
     
@@ -56,35 +59,57 @@ const LoginPage = () => {
         loginContainer.appendChild(element);
       }
     }
-  }, []);
+  }, [navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        // Store login info in localStorage (in a real app, you'd use a token)
-        localStorage.setItem('isAdminLoggedIn', 'true');
-        
-        toast({
-          title: "Login successful!",
-          description: "Welcome to the admin dashboard.",
-          duration: 3000,
-        });
-        
-        navigate('/admin');
-      } else {
-        toast({
-          title: "Login failed",
-          description: "Invalid email or password. Please try again.",
-          variant: "destructive",
-          duration: 3000,
-        });
+    try {
+      // Try to find the admin user with the provided email
+      const { data, error } = await supabase
+        .from('admin_users')
+        .select('*')
+        .eq('email', email.trim())
+        .maybeSingle();
+      
+      if (error) {
+        throw error;
       }
+      
+      if (!data) {
+        // Admin user not found
+        throw new Error('Invalid email or password');
+      }
+      
+      // Check password (in a real app, this would be properly hashed and compared)
+      if (data.password !== password) {
+        throw new Error('Invalid email or password');
+      }
+      
+      // Login successful
+      localStorage.setItem('adminEmail', email);
+      localStorage.setItem('isAdminLoggedIn', 'true');
+      
+      toast({
+        title: "Login successful!",
+        description: "Welcome to the admin dashboard.",
+        duration: 3000,
+      });
+      
+      navigate('/admin');
+    } catch (error: any) {
+      console.error('Login error:', error);
+      
+      toast({
+        title: "Login failed",
+        description: error.message || "Invalid email or password. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -141,7 +166,7 @@ const LoginPage = () => {
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <div className="text-sm text-center text-gray-500">
-                <p>Demo Credentials:</p>
+                <p>Default Admin Credentials:</p>
                 <p>Email: admin@lakeishascupcakery.com</p>
                 <p>Password: admin123</p>
               </div>
