@@ -14,6 +14,8 @@ interface Product {
   image_url?: string;
   title?: string;
   image?: string;
+  // Adding string as an alternative type for price to handle static data
+  price?: string;
 }
 
 interface Category {
@@ -60,11 +62,12 @@ export const useCategoryData = (categoryId: string | undefined) => {
             } else {
               // Try to get from imported static data
               const staticCategory = categoryId && categoryId in categoryData ? 
-                categoryData[categoryId as keyof typeof categoryData] as Category : 
+                categoryData[categoryId as keyof typeof categoryData] : 
                 null;
               
-              setCategory(staticCategory);
-              setProducts(staticCategory?.products || []);
+              // Explicitly cast to Category type
+              setCategory(staticCategory as unknown as Category);
+              setProducts((staticCategory as unknown as Category)?.products || []);
             }
           }
           
@@ -86,8 +89,9 @@ export const useCategoryData = (categoryId: string | undefined) => {
             console.error('Error fetching products:', productsError);
             // Fall back to static data
             if (categoryId) {
-              const staticCategory = categoryData[categoryId as keyof typeof categoryData] as Category;
-              setProducts(staticCategory?.products || []);
+              const staticCategory = categoryData[categoryId as keyof typeof categoryData];
+              // Explicitly cast to Category type
+              setProducts((staticCategory as unknown as Category)?.products || []);
             }
             
             toast({
@@ -101,18 +105,20 @@ export const useCategoryData = (categoryId: string | undefined) => {
         } else {
           // Fall back to static data if no category found in database
           if (categoryId) {
-            const staticCategory = categoryData[categoryId as keyof typeof categoryData] as Category;
-            setCategory(staticCategory);
-            setProducts(staticCategory?.products || []);
+            const staticCategory = categoryData[categoryId as keyof typeof categoryData];
+            // Explicitly cast to Category type
+            setCategory(staticCategory as unknown as Category);
+            setProducts((staticCategory as unknown as Category)?.products || []);
           }
         }
       } catch (error) {
         console.error('Error:', error);
         // Fall back to static data
         if (categoryId) {
-          const staticCategory = categoryData[categoryId as keyof typeof categoryData] as Category;
-          setCategory(staticCategory);
-          setProducts(staticCategory?.products || []);
+          const staticCategory = categoryData[categoryId as keyof typeof categoryData];
+          // Explicitly cast to Category type
+          setCategory(staticCategory as unknown as Category);
+          setProducts((staticCategory as unknown as Category)?.products || []);
         }
         
         toast({
