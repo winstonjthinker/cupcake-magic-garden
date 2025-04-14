@@ -8,20 +8,22 @@ import {
   BookOpen, 
   PhoneCall, 
   LogIn, 
-  UserPlus, 
-  ChevronDown 
+  UserPlus,
+  Menu,
+  X
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Link } from 'react-router-dom';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetClose
+} from "@/components/ui/sheet";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,6 +40,18 @@ const Navbar = () => {
     };
   }, []);
 
+  const menuItems = [
+    { to: "/", icon: <Home size={18} />, label: "Home" },
+    { to: "/category/cupcakes", icon: <ShoppingBag size={18} />, label: "Cupcakes" },
+    { to: "/category/cakes", icon: <ShoppingBag size={18} />, label: "Cakes" },
+    { to: "/category/cakesicles", icon: <ShoppingBag size={18} />, label: "Cakesicles" },
+    { to: "/category/sweet-treats", icon: <ShoppingBag size={18} />, label: "Sweet Treats" },
+    { to: "/blog", icon: <BookOpen size={18} />, label: "Blog" },
+    { to: "/contact", icon: <PhoneCall size={18} />, label: "Contact" },
+    { to: "/login", icon: <LogIn size={18} />, label: "Login" },
+    { to: "/register", icon: <UserPlus size={18} />, label: "Create Account" }
+  ];
+
   return (
     <header
       className={cn(
@@ -53,73 +67,63 @@ const Navbar = () => {
             <span className="font-pacifico text-2xl md:text-3xl text-cupcake-darkPink transition-transform group-hover:scale-110 duration-300">LaKeisha's</span>
             <span className="font-pacifico text-2xl md:text-3xl text-cupcake-darkBlue transition-transform group-hover:scale-110 duration-300">Cupcakery</span>
           </Link>
-          
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="nav-link text-gray-700 hover:text-cupcake-darkBlue flex items-center gap-1 transition-all duration-300 hover:scale-105">
-              <Home size={18} className="animate-bounce-light" />
-              <span>Home</span>
-            </Link>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="nav-link text-gray-700 hover:text-cupcake-darkBlue flex items-center gap-1 transition-all duration-300 hover:scale-105">
-                  <ShoppingBag size={18} className="animate-pulse-light" />
-                  <span>Categories</span>
-                  <ChevronDown size={16} className="ml-1 transition-transform duration-300 group-data-[state=open]:rotate-180" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="bg-white/95 backdrop-blur-sm border border-cupcake-pink/30 shadow-lg rounded-xl p-2 w-48 animate-in slide-in-from-top-5 fade-in-80 z-50">
-                <DropdownMenuItem asChild className="rounded-lg hover:bg-cupcake-pink/10 cursor-pointer px-4 py-2.5 my-1 transition-all duration-300 hover:translate-x-1 focus:bg-cupcake-pink/10">
-                  <Link to="/category/cupcakes" className="flex items-center gap-2 w-full">
-                    <span className="text-cupcake-darkPink">Cupcakes</span>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center gap-6">
+            {menuItems.slice(0, 7).map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="nav-link text-gray-700 hover:text-cupcake-darkBlue flex items-center gap-1 transition-all duration-300 hover:scale-105"
+              >
+                {item.icon}
+                <span>{item.label}</span>
+              </Link>
+            ))}
+            <div className="flex items-center gap-2">
+              {menuItems.slice(7).map((item) => (
+                <Button
+                  key={item.to}
+                  variant="ghost"
+                  asChild
+                  className="text-gray-700 hover:text-cupcake-darkBlue hover:bg-cupcake-blue/10"
+                >
+                  <Link to={item.to}>
+                    {item.icon}
+                    <span className="ml-1">{item.label}</span>
                   </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg hover:bg-cupcake-blue/10 cursor-pointer px-4 py-2.5 my-1 transition-all duration-300 hover:translate-x-1 focus:bg-cupcake-blue/10">
-                  <Link to="/category/cakes" className="flex items-center gap-2 w-full">
-                    <span className="text-cupcake-darkBlue">Cakes</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg hover:bg-purple-100 cursor-pointer px-4 py-2.5 my-1 transition-all duration-300 hover:translate-x-1 focus:bg-purple-100">
-                  <Link to="/category/cakesicles" className="flex items-center gap-2 w-full">
-                    <span className="text-purple-700">Cakesicles</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="rounded-lg hover:bg-amber-100 cursor-pointer px-4 py-2.5 my-1 transition-all duration-300 hover:translate-x-1 focus:bg-amber-100">
-                  <Link to="/category/sweet-treats" className="flex items-center gap-2 w-full">
-                    <span className="text-amber-600">Sweet Treats</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            <Link to="/blog" className="nav-link text-gray-700 hover:text-cupcake-darkBlue flex items-center gap-1 transition-all duration-300 hover:scale-105">
-              <BookOpen size={18} />
-              <span>Blog</span>
-            </Link>
-            
-            <Link to="/contact" className="nav-link text-gray-700 hover:text-cupcake-darkBlue flex items-center gap-1 transition-all duration-300 hover:scale-105">
-              <PhoneCall size={18} />
-              <span>Contact</span>
-            </Link>
+                </Button>
+              ))}
+            </div>
           </nav>
-          
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild className="hidden md:flex text-gray-700 hover:text-cupcake-darkBlue hover:bg-cupcake-blue/10 transition-all duration-300 hover:scale-105">
-              <Link to="/login">
-                <LogIn size={18} className="mr-1" /> Login
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild className="hidden md:flex text-gray-700 hover:text-cupcake-darkBlue hover:bg-cupcake-blue/10 transition-all duration-300 hover:scale-105">
-              <Link to="/register">
-                <UserPlus size={18} className="mr-1" /> Create Account
-              </Link>
-            </Button>
-            <Button asChild className="bg-cupcake-blue hover:bg-cupcake-darkBlue transition-all duration-300 hover:scale-105 animate-pulse-slow">
-              <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer">
-                Order Now
-              </a>
-            </Button>
-          </div>
+
+          {/* Mobile Menu Trigger */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                className="lg:hidden"
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] sm:w-[350px] bg-white">
+              <nav className="flex flex-col gap-4 mt-8">
+                {menuItems.map((item) => (
+                  <SheetClose asChild key={item.to}>
+                    <Link
+                      to={item.to}
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-cupcake-darkBlue hover:bg-cupcake-blue/10 rounded-lg transition-all duration-300"
+                    >
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </Link>
+                  </SheetClose>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
