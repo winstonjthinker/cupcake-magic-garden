@@ -1,14 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Lock, User, ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+
+// Lazy load components that aren't immediately needed
+const Navbar = lazy(() => import('@/components/Navbar'));
+const Footer = lazy(() => import('@/components/Footer'));
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -27,36 +29,50 @@ const LoginPage = () => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
     
-    // Create floating cupcake elements
-    const floatingElementsCount = 6;
+    // Create floating cupcake elements - optimized for performance
+    const floatingElementsCount = window.innerWidth < 768 ? 3 : 6; // Reduce elements on mobile
     const loginContainer = document.getElementById('login-container');
     
     if (loginContainer) {
       const shapes = ['🧁', '🍰', '🎂', '🍪'];
+      const elements: HTMLDivElement[] = [];
       
-      for (let i = 0; i < floatingElementsCount; i++) {
+      const createFloatingElement = (i: number) => {
         const element = document.createElement('div');
         
-        // Random position
-        const top = Math.random() * 100;
-        const left = Math.random() * 100;
+        // Random position with mobile considerations
+        const top = Math.random() * (window.innerWidth < 768 ? 70 : 100);
+        const left = Math.random() * (window.innerWidth < 768 ? 80 : 100);
         
-        // Set styles
-        element.style.position = 'absolute';
-        element.style.top = `${top}%`;
-        element.style.left = `${left}%`;
-        element.style.fontSize = `${Math.random() * 20 + 20}px`;
-        element.style.opacity = '0.2';
-        element.style.zIndex = '-1';
-        element.style.transform = 'translate(-50%, -50%)';
-        element.style.animation = `float ${Math.random() * 3 + 3}s ease-in-out infinite`;
-        element.style.animationDelay = `${Math.random() * 2}s`;
+        // Optimized styles
+        element.style.cssText = `
+          position: absolute;
+          top: ${top}%;
+          left: ${left}%;
+          font-size: ${Math.random() * (window.innerWidth < 768 ? 16 : 20) + 16}px;
+          opacity: 0.2;
+          z-index: -1;
+          transform: translate(-50%, -50%);
+          animation: float ${Math.random() * 3 + 3}s ease-in-out infinite;
+          animation-delay: ${Math.random() * 2}s;
+        `;
         
-        // Add content
         element.innerText = shapes[Math.floor(Math.random() * shapes.length)];
-        
+        elements.push(element);
         loginContainer.appendChild(element);
-      }
+      };
+      
+      // Batch DOM operations
+      requestAnimationFrame(() => {
+        for (let i = 0; i < floatingElementsCount; i++) {
+          createFloatingElement(i);
+        }
+      });
+      
+      // Cleanup
+      return () => {
+        elements.forEach(element => element.remove());
+      };
     }
   }, [navigate]);
 
@@ -106,24 +122,26 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Navbar />
+      <Suspense fallback={<div className="h-16 bg-white/80"></div>}>
+        <Navbar />
+      </Suspense>
       
-      <main className="flex-1 pt-24 pb-16" id="login-container">
-        <div className="container mx-auto px-4 max-w-md">
+      <main className="flex-1 pt-16 md:pt-24 pb-8 md:pb-16" id="login-container">
+        <div className="container mx-auto px-4 max-w-[95%] sm:max-w-md">
           <Card className="w-full bg-white/80 backdrop-blur-sm shadow-xl border-cupcake-pink/20 animate-fade-in">
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl font-pacifico text-center text-cupcake-darkPink">Admin Login</CardTitle>
-              <CardDescription className="text-center">
+            <CardHeader className="space-y-1 p-4 md:p-6">
+              <CardTitle className="text-xl md:text-2xl font-pacifico text-center text-cupcake-darkPink">Admin Login</CardTitle>
+              <CardDescription className="text-center text-sm md:text-base">
                 Enter your credentials to access the dashboard
               </CardDescription>
             </CardHeader>
-            <CardContent className="grid gap-4">
+            <CardContent className="grid gap-3 md:gap-4 p-4 md:p-6">
               <form onSubmit={handleSubmit}>
-                <div className="grid gap-4">
+                <div className="grid gap-3 md:gap-4">
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <Input
-                      className="pl-10"
+                      className="pl-10 h-11"
                       placeholder="Email Address"
                       type="email"
                       value={email}
@@ -134,7 +152,7 @@ const LoginPage = () => {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <Input
-                      className="pl-10"
+                      className="pl-10 h-11"
                       placeholder="Password"
                       type="password"
                       value={password}
@@ -144,7 +162,7 @@ const LoginPage = () => {
                   </div>
                   <Button 
                     type="submit" 
-                    className="w-full bg-cupcake-darkPink hover:bg-pink-700 text-white rounded-md py-2"
+                    className="w-full bg-cupcake-darkPink hover:bg-pink-700 text-white rounded-md h-11"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Logging in...' : (
@@ -156,13 +174,13 @@ const LoginPage = () => {
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4">
-              <div className="text-sm text-center text-gray-500">
+            <CardFooter className="flex flex-col space-y-4 p-4 md:p-6">
+              <div className="text-xs md:text-sm text-center text-gray-500">
                 <p>Default Admin Credentials:</p>
                 <p>Email: admin@lakeishascupcakery.com</p>
                 <p>Password: admin123</p>
               </div>
-              <div className="text-center text-sm text-gray-500">
+              <div className="text-center text-xs md:text-sm text-gray-500">
                 <Link to="/" className="text-cupcake-darkBlue hover:underline">
                   Return to Website
                 </Link>
@@ -172,7 +190,9 @@ const LoginPage = () => {
         </div>
       </main>
       
-      <Footer />
+      <Suspense fallback={<div className="h-16 bg-white/80"></div>}>
+        <Footer />
+      </Suspense>
     </div>
   );
 };
