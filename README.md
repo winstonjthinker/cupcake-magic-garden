@@ -101,8 +101,76 @@ You can work locally with your editor of choice. Pushed changes will reflect in 
 
 ## I Want to Use a Custom Domain—Is That Possible?
 
-Custom domains are not supported in Lovable yet. For deployment under your own domain, use a service like [Netlify](https://docs.lovable.dev/tips-tricks/custom-domain/).
+
+***
+**README.md section** showing both the GitHub UI and Git command-line methods for merging your `tavonga` branch into `main`:
 
 ***
 
+## 🔀 Merging the `tavonga` Branch into `main`
+
+### **If you have changes on your `tavonga` branch that you want to apply to the `main` branch, you can do this either using GitHub’s UI (pull request) or via command-line.**
+
+***
+
+### **Method 1: GitHub UI (Recommended for Collaboration)**
+
+1. **Push Your Local Changes** (if not already pushed):
+    ```bash
+    git add .
+    git commit -m "Description of your changes"
+    git push origin tavonga
+    ```
+2. **Create a Pull Request (PR) on GitHub**:
+    - Go to your repo: [https://github.com/winstonjthinker/cupcake-magic-garden](https://github.com/winstonjthinker/cupcake-magic-garden)
+    - On the homepage, you may see a "Compare & pull request" button — click it.
+    - If not, go to the **Pull requests** tab and click **New pull request**.
+    - Set the **base** branch to `main` and **compare** branch to `tavonga`.
+    - Add a title and description for your PR, and click **Create pull request**.
+
+3. **Review & Merge the Pull Request**:
+    - Collaborators can comment or review.
+    - Once ready, click **Merge pull request** (choose standard "Merge," "Squash and merge," or "Rebase and merge" as needed).
+    - Changes from `tavonga` are now in `main`.
+
+***
+
+### **Method 2: Command-Line Git Merge**
+
+1. **Ensure all changes on the branch are committed and pushed.**
+2. **Switch to the main branch**:
+    ```bash
+    git checkout main
+    ```
+3. **Pull the latest changes from remote**:
+    ```bash
+    git pull origin main
+    ```
+4. **Merge the tavonga branch**:
+    ```bash
+    git merge tavonga
+    ```
+5. **Push the merged changes to GitHub**:
+    ```bash
+    git push origin main
+    ```
+
+***
+
+### **Summary Table**
+
+| Action                   | What It’s Called                |
+|--------------------------|----------------------------------|
+| Apply `tavonga` to `main`| Pull request (UI) or Git merge   |
+
+***
+
+**Note:**  
+
+**Tip:**  
+Pull requests in the UI are best for teams, discussion, and audit history. Direct merging with Git is useful for fast local work or smaller teams.
+
+***
+
+Replace branch names with those relevant to your workflow.
 **Happy Coding! 🚀**
