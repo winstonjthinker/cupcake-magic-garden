@@ -94,7 +94,7 @@ You can work locally with your editor of choice. Pushed changes will reflect in 
 
 ## How Can I Deploy This Project?
 
-- Open [Lovable](https://lovable.dev/projects/d15a63f1-b1ff-461f-b5bc-b01c93ef52f8).
+
 - Click on **Share → Publish**.
 
 ***
