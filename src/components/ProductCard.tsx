@@ -3,19 +3,20 @@ import React from 'react';
 import { Instagram, Send } from 'lucide-react';
 
 interface ProductCardProps {
-  image: string;
-  title: string;
+  id: string | number;
+  imageUrl: string;
+  name: string;
   description: string;
   price: string;
 }
 
-const ProductCard = ({ image, title, description, price }: ProductCardProps) => {
+const ProductCard = ({ id, imageUrl, name, description, price }: ProductCardProps) => {
   return (
     <div className="group bg-white rounded-2xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl">
       <div className="relative h-64 overflow-hidden">
         <img 
-          src={image} 
-          alt={title} 
+          src={imageUrl} 
+          alt={name} 
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute top-3 right-3">
@@ -26,7 +27,7 @@ const ProductCard = ({ image, title, description, price }: ProductCardProps) => 
       </div>
       
       <div className="p-5">
-        <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
+        <h3 className="text-xl font-semibold text-gray-800 mb-2">{name}</h3>
         <p className="text-gray-600 text-sm mb-4">{description}</p>
         
         <div className="flex gap-2">

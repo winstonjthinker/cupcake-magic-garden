@@ -7,20 +7,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { productsApi } from '@/lib/api';
 
 interface Category {
-  id: string;
+  id: number;
   name: string;
 }
 
 interface Product {
-  id: string;
+  id: number;
   name: string;
-  description: string | null;
+  description: string;
   price: number;
-  image_url: string | null;
-  category_id: string | null;
+  image: string | null;
+  category: number | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 const ProductManagement = () => {
@@ -38,30 +40,22 @@ const ProductManagement = () => {
     name: '',
     description: '',
     price: '',
-    image_url: '',
-    category_id: ''
+    image: '',
+    category: ''
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch categories
-        const { data: categoriesData, error: categoriesError } = await supabase
-          .from('categories')
-          .select('id, name');
-
-        if (categoriesError) throw categoriesError;
+        setLoading(true);
+        // Fetch categories and products in parallel
+        const [categoriesResponse, productsResponse] = await Promise.all([
+          productsApi.getCategories(),
+          productsApi.getProducts()
+        ]);
         
-        setCategories(categoriesData || []);
-
-        // Fetch products
-        const { data: productsData, error: productsError } = await supabase
-          .from('products')
-          .select('*');
-
-        if (productsError) throw productsError;
-        
-        setProducts(productsData || []);
+        setCategories(categoriesResponse.data || []);
+        setProducts(productsResponse.data || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -87,8 +81,8 @@ const ProductManagement = () => {
       name: '',
       description: '',
       price: '',
-      image_url: '',
-      category_id: ''
+      image: '',
+      category: ''
     });
   };
 
@@ -103,8 +97,8 @@ const ProductManagement = () => {
       name: product.name,
       description: product.description || '',
       price: product.price.toString(),
-      image_url: product.image_url || '',
-      category_id: product.category_id || ''
+      image: product.image || '',
+      category: product.category?.toString() || ''
     });
     setIsEditDialogOpen(true);
   };
@@ -121,21 +115,15 @@ const ProductManagement = () => {
     try {
       const newProduct = {
         name: formData.name,
-        description: formData.description || null,
+        description: formData.description || '',
         price: parseFloat(formData.price),
-        image_url: formData.image_url || null,
-        category_id: formData.category_id || null
+        image: formData.image || null,
+        category: formData.category ? parseInt(formData.category) : null
       };
 
-      const { data, error } = await supabase
-        .from('products')
-        .insert([newProduct])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setProducts(prev => [...prev, data]);
+      const response = await productsApi.createProduct(newProduct);
+      
+      setProducts(prev => [...prev, response.data]);
       setIsAddDialogOpen(false);
       resetForm();
       
@@ -164,22 +152,15 @@ const ProductManagement = () => {
     try {
       const updatedProduct = {
         name: formData.name,
-        description: formData.description || null,
+        description: formData.description || '',
         price: parseFloat(formData.price),
-        image_url: formData.image_url || null,
-        category_id: formData.category_id || null
+        image: formData.image || null,
+        category: formData.category ? parseInt(formData.category) : null
       };
 
-      const { data, error } = await supabase
-        .from('products')
-        .update(updatedProduct)
-        .eq('id', selectedProduct.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setProducts(prev => prev.map(p => p.id === selectedProduct.id ? data : p));
+      const response = await productsApi.updateProduct(selectedProduct.id, updatedProduct);
+      
+      setProducts(prev => prev.map(p => p.id === selectedProduct.id ? response.data : p));
       setIsEditDialogOpen(false);
       setSelectedProduct(null);
       
@@ -205,12 +186,7 @@ const ProductManagement = () => {
     setFormSubmitting(true);
     
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', selectedProduct.id);
-
-      if (error) throw error;
+      await productsApi.deleteProduct(selectedProduct.id);
 
       setProducts(prev => prev.filter(p => p.id !== selectedProduct.id));
       setIsDeleteDialogOpen(false);
@@ -232,8 +208,8 @@ const ProductManagement = () => {
     }
   };
 
-  const getCategoryName = (categoryId: string | null) => {
-    if (!categoryId) return 'Uncategorized';
+  const getCategoryName = (categoryId: number | null) => {
+    if (categoryId === null || categoryId === undefined) return 'Uncategorized';
     const category = categories.find(c => c.id === categoryId);
     return category ? category.name : 'Unknown';
   };
@@ -286,9 +262,9 @@ const ProductManagement = () => {
               {products.map(product => (
                 <tr key={product.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    {product.image_url ? (
+                    {product.image ? (
                       <img 
-                        src={product.image_url} 
+                        src={product.image} 
                         alt={product.name} 
                         className="h-10 w-10 rounded-full object-cover"
                       />
@@ -302,7 +278,7 @@ const ProductManagement = () => {
                     <div className="text-sm font-medium text-gray-900">{product.name}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{getCategoryName(product.category_id)}</div>
+                    <div className="text-sm text-gray-500">{getCategoryName(product.category)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
@@ -378,21 +354,21 @@ const ProductManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="image_url" className="text-sm font-medium text-gray-700">Image URL</label>
+              <label htmlFor="image" className="text-sm font-medium text-gray-700">Image URL</label>
               <Input
-                id="image_url"
-                name="image_url"
-                value={formData.image_url}
+                id="image"
+                name="image"
+                value={formData.image}
                 onChange={handleInputChange}
                 placeholder="https://example.com/image.jpg"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="category_id" className="text-sm font-medium text-gray-700">Category</label>
+              <label htmlFor="category" className="text-sm font-medium text-gray-700">Category</label>
               <select
-                id="category_id"
-                name="category_id"
-                value={formData.category_id}
+                id="category"
+                name="category"
+                value={formData.category}
                 onChange={handleInputChange}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
               >
@@ -467,21 +443,21 @@ const ProductManagement = () => {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="edit-image_url" className="text-sm font-medium text-gray-700">Image URL</label>
+              <label htmlFor="edit-image" className="text-sm font-medium text-gray-700">Image URL</label>
               <Input
-                id="edit-image_url"
-                name="image_url"
-                value={formData.image_url}
+                id="edit-image"
+                name="image"
+                value={formData.image}
                 onChange={handleInputChange}
                 placeholder="https://example.com/image.jpg"
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="edit-category_id" className="text-sm font-medium text-gray-700">Category</label>
+              <label htmlFor="edit-category" className="text-sm font-medium text-gray-700">Category</label>
               <select
-                id="edit-category_id"
-                name="category_id"
-                value={formData.category_id}
+                id="edit-category"
+                name="category"
+                value={formData.category}
                 onChange={handleInputChange}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
               >
