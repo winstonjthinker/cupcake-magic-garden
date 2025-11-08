@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Lock, User, ArrowRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 // Lazy load components that aren't immediately needed
 const Navbar = lazy(() => import('@/components/Navbar'));
@@ -17,102 +17,58 @@ const LoginPage = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const { login, isAuthenticated } = useAuth();
 
+  // Redirect if already authenticated
   useEffect(() => {
-    // Check if already logged in
-    const adminEmail = localStorage.getItem('adminEmail');
-    if (adminEmail) {
-      navigate('/admin');
+    if (isAuthenticated) {
+      // Redirect to the previous page or home
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
     }
     
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-    
-    // Create floating cupcake elements - optimized for performance
-    const floatingElementsCount = window.innerWidth < 768 ? 3 : 6; // Reduce elements on mobile
-    const loginContainer = document.getElementById('login-container');
-    
-    if (loginContainer) {
-      const shapes = ['🧁', '🍰', '🎂', '🍪'];
-      const elements: HTMLDivElement[] = [];
-      
-      const createFloatingElement = (i: number) => {
-        const element = document.createElement('div');
-        
-        // Random position with mobile considerations
-        const top = Math.random() * (window.innerWidth < 768 ? 70 : 100);
-        const left = Math.random() * (window.innerWidth < 768 ? 80 : 100);
-        
-        // Optimized styles
-        element.style.cssText = `
-          position: absolute;
-          top: ${top}%;
-          left: ${left}%;
-          font-size: ${Math.random() * (window.innerWidth < 768 ? 16 : 20) + 16}px;
-          opacity: 0.2;
-          z-index: -1;
-          transform: translate(-50%, -50%);
-          animation: float ${Math.random() * 3 + 3}s ease-in-out infinite;
-          animation-delay: ${Math.random() * 2}s;
-        `;
-        
-        element.innerText = shapes[Math.floor(Math.random() * shapes.length)];
-        elements.push(element);
-        loginContainer.appendChild(element);
-      };
-      
-      // Batch DOM operations
-      requestAnimationFrame(() => {
-        for (let i = 0; i < floatingElementsCount; i++) {
-          createFloatingElement(i);
-        }
-      });
-      
-      // Cleanup
-      return () => {
-        elements.forEach(element => element.remove());
-      };
-    }
-  }, [navigate]);
+  }, [isAuthenticated, navigate, location.state]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    try {
-      // Verify password using pgcrypto on Supabase
-      const { data: authResult, error: authError } = await supabase.rpc('verify_admin_password', {
-        email_input: email.trim(),
-        password_input: password
+    if (!email || !password) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all fields',
+        variant: 'destructive',
       });
-      
-      if (authError) {
-        throw authError;
-      }
-      
-      if (!authResult) {
-        throw new Error('Invalid email or password');
-      }
-      
-      // Login successful
-      localStorage.setItem('adminEmail', email);
-      localStorage.setItem('isAdminLoggedIn', 'true');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await login(email, password);
       
       toast({
-        title: "Login successful!",
-        description: "Welcome to the admin dashboard.",
-        duration: 3000,
+        title: 'Success',
+        description: 'Login successful!',
       });
       
-      navigate('/admin');
+      // The navigation will be handled by the useEffect when isAuthenticated changes
     } catch (error: any) {
       console.error('Login error:', error);
       
+      let errorMessage = 'Login failed. Please try again.';
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
-        title: "Login failed",
-        description: error.message || "Invalid email or password. Please try again.",
-        variant: "destructive",
+        title: 'Login Error',
+        description: errorMessage,
+        variant: 'destructive',
         duration: 3000,
       });
     } finally {
@@ -126,7 +82,7 @@ const LoginPage = () => {
         <Navbar />
       </Suspense>
       
-      <main className="flex-1 pt-16 md:pt-24 pb-8 md:pb-16" id="login-container">
+      <main className="flex-1 pt-16 md:pt-24 pb-8 md:pb-16">
         <div className="container mx-auto px-4 max-w-[95%] sm:max-w-md">
           <Card className="w-full bg-white/80 backdrop-blur-sm shadow-xl border-cupcake-pink/20 animate-fade-in">
             <CardHeader className="space-y-1 p-4 md:p-6">
@@ -139,7 +95,7 @@ const LoginPage = () => {
               <form onSubmit={handleSubmit}>
                 <div className="grid gap-3 md:gap-4">
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <Input
                       className="pl-10 h-11"
                       placeholder="Email Address"
@@ -174,23 +130,18 @@ const LoginPage = () => {
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-4 p-4 md:p-6">
-              <div className="text-xs md:text-sm text-center text-gray-500">
-                <p>Default Admin Credentials:</p>
-                <p>Email: admin@lakeishascupcakery.com</p>
-                <p>Password: admin123</p>
-              </div>
-              <div className="text-center text-xs md:text-sm text-gray-500">
-                <Link to="/" className="text-cupcake-darkBlue hover:underline">
-                  Return to Website
+            <div className="p-4 md:p-6 pt-0">
+              <div className="text-center text-xs text-gray-400">
+                <Link to="/forgot-password" className="hover:underline">
+                  Forgot your password?
                 </Link>
               </div>
-            </CardFooter>
+            </div>
           </Card>
         </div>
       </main>
       
-      <Suspense fallback={<div className="h-16 bg-white/80"></div>}>
+      <Suspense fallback={null}>
         <Footer />
       </Suspense>
     </div>

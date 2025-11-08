@@ -6,12 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { authApi } from '@/lib/api';
 
 interface AdminUser {
-  id: string;
+  id: number;
   email: string;
-  created_at: string;
+  is_superuser: boolean;
+  is_staff: boolean;
+  date_joined: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 const AdminUserManagement = () => {
@@ -32,14 +36,15 @@ const AdminUserManagement = () => {
   useEffect(() => {
     const fetchAdminUsers = async () => {
       try {
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('id, email, created_at')
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        
-        setAdminUsers(data || []);
+        // Since we don't have a direct endpoint to get all users,
+        // we'll use the profile endpoint to get the current user's data
+        // and handle admin users differently
+        const response = await authApi.getProfile();
+        // For now, just show the current user as admin
+        // In a real app, you would have an admin endpoint to fetch all users
+        if (response.data) {
+          setAdminUsers([response.data]);
+        }
       } catch (error) {
         console.error('Error fetching admin users:', error);
         toast({
@@ -98,27 +103,27 @@ const AdminUserManagement = () => {
     setFormSubmitting(true);
     
     try {
-      const newAdminUser = {
+      // Register the user with default name
+      const registerResponse = await authApi.register({
         email: formData.email,
         password: formData.password,
-      };
-
-      const { data, error } = await supabase
-        .from('admin_users')
-        .insert([newAdminUser])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setAdminUsers(prev => [data, ...prev]);
-      setIsAddDialogOpen(false);
-      resetForm();
-      
-      toast({
-        title: 'Success',
-        description: 'Admin user added successfully',
+        password2: formData.confirmPassword,
+        first_name: 'Admin',
+        last_name: 'User'
       });
+
+      if (registerResponse.data) {
+        toast({
+          title: 'Success',
+          description: 'Admin user created successfully',
+        });
+        // Refresh the admin users list
+        const response = await authApi.getProfile();
+        if (response.data) {
+          setAdminUsers([response.data]);
+        }
+        setIsAddDialogOpen(false);
+      }
     } catch (error: any) {
       console.error('Error adding admin user:', error);
       
@@ -147,21 +152,15 @@ const AdminUserManagement = () => {
     setFormSubmitting(true);
     
     try {
-      const { error } = await supabase
-        .from('admin_users')
-        .delete()
-        .eq('id', selectedUser.id);
-
-      if (error) throw error;
-
-      setAdminUsers(prev => prev.filter(user => user.id !== selectedUser.id));
-      setIsDeleteDialogOpen(false);
-      setSelectedUser(null);
-      
+      // In a real app, you would have an endpoint to update user roles
+      // For now, we'll just show a message that this action is not available
       toast({
-        title: 'Success',
-        description: 'Admin user deleted successfully',
+        title: 'Info',
+        description: 'User management is currently limited in the demo version',
       });
+      
+      // Close the dialog
+      setIsDeleteDialogOpen(false);
     } catch (error) {
       console.error('Error deleting admin user:', error);
       toast({
@@ -207,43 +206,41 @@ const AdminUserManagement = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 border rounded-lg">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {adminUsers.map(user => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <User className="mr-2 h-5 w-5 text-gray-400" />
-                      <div className="text-sm font-medium text-gray-900">{user.email}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="h-8 px-2 text-red-600 border-red-600 hover:bg-red-50"
-                      onClick={() => openDeleteDialog(user)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="space-y-4">
+          {adminUsers.map(user => (
+            <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10">
+                  <User className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-medium">{user.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {user.is_superuser ? 'Super Admin' : 'Staff'} • 
+                    Joined {new Date(user.date_joined).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleResetPassword(user.id)}
+                  className="h-8"
+                >
+                  <Key className="h-3.5 w-3.5 mr-1" /> Reset Password
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-8 text-red-600 border-red-600 hover:bg-red-50"
+                  onClick={() => openDeleteDialog(user)}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

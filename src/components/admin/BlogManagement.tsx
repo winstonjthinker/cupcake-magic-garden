@@ -7,14 +7,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { blogApi } from '@/lib/api';
 
 interface BlogArticle {
-  id: string;
+  id: number;
   title: string;
   content: string;
   excerpt: string;
-  image_url?: string | null;
+  image?: string | null;
   author?: string | null;
   published_at: string;
   created_at: string;
@@ -35,19 +35,15 @@ const BlogManagement = () => {
     title: '',
     excerpt: '',
     content: '',
-    image_url: '',
+    image: '',
     author: ''
   });
 
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const { data, error } = await supabase
-          .from('blog_articles')
-          .select('*')
-          .order('published_at', { ascending: false });
-
-        if (error) throw error;
+        const response = await blogApi.getPosts({ ordering: '-published_at' });
+        const data = response.data || [];
         
         setArticles(data || []);
       } catch (error) {
@@ -75,7 +71,7 @@ const BlogManagement = () => {
       title: '',
       excerpt: '',
       content: '',
-      image_url: '',
+      image: '',
       author: ''
     });
   };
@@ -89,9 +85,9 @@ const BlogManagement = () => {
     setSelectedArticle(article);
     setFormData({
       title: article.title,
-      excerpt: article.excerpt,
-      content: article.content,
-      image_url: article.image_url || '',
+      excerpt: article.excerpt || '',
+      content: article.content || '',
+      image: article.image || '',
       author: article.author || ''
     });
     setIsEditDialogOpen(true);
@@ -111,32 +107,27 @@ const BlogManagement = () => {
         title: formData.title,
         excerpt: formData.excerpt,
         content: formData.content,
-        image_url: formData.image_url || null,
+        image: formData.image || null,
         author: formData.author || null,
         published_at: new Date().toISOString()
       };
 
-      const { data, error } = await supabase
-        .from('blog_articles')
-        .insert([newArticle])
-        .select()
-        .single();
+      const response = await blogApi.createPost(newArticle);
+      const createdArticle = response.data;
 
-      if (error) throw error;
-
-      setArticles(prev => [data, ...prev]);
+      setArticles(prev => [createdArticle, ...prev]);
       setIsAddDialogOpen(false);
       resetForm();
       
       toast({
         title: 'Success',
-        description: 'Blog article published successfully',
+        description: 'Article created successfully',
       });
     } catch (error) {
       console.error('Error adding blog article:', error);
       toast({
         title: 'Error',
-        description: 'Failed to publish blog article',
+        description: 'Failed to create blog article',
         variant: 'destructive',
       });
     } finally {
@@ -155,27 +146,25 @@ const BlogManagement = () => {
         title: formData.title,
         excerpt: formData.excerpt,
         content: formData.content,
-        image_url: formData.image_url || null,
-        author: formData.author || null,
-        updated_at: new Date().toISOString()
+        image: formData.image || null,
+        author: formData.author || null
       };
 
-      const { data, error } = await supabase
-        .from('blog_articles')
-        .update(updatedArticle)
-        .eq('id', selectedArticle.id)
-        .select()
-        .single();
+      const response = await blogApi.updatePost(selectedArticle.id, updatedArticle);
+      const updatedData = response.data;
 
-      if (error) throw error;
-
-      setArticles(prev => prev.map(a => a.id === selectedArticle.id ? data : a));
+      setArticles(prev => 
+        prev.map(article => 
+          article.id === selectedArticle.id ? updatedData : article
+        )
+      );
+      
       setIsEditDialogOpen(false);
       setSelectedArticle(null);
       
       toast({
         title: 'Success',
-        description: 'Blog article updated successfully',
+        description: 'Article updated successfully',
       });
     } catch (error) {
       console.error('Error updating blog article:', error);
@@ -195,20 +184,15 @@ const BlogManagement = () => {
     setFormSubmitting(true);
     
     try {
-      const { error } = await supabase
-        .from('blog_articles')
-        .delete()
-        .eq('id', selectedArticle.id);
+      await blogApi.deletePost(selectedArticle.id);
 
-      if (error) throw error;
-
-      setArticles(prev => prev.filter(a => a.id !== selectedArticle.id));
+      setArticles(prev => prev.filter(article => article.id !== selectedArticle.id));
       setIsDeleteDialogOpen(false);
       setSelectedArticle(null);
       
       toast({
         title: 'Success',
-        description: 'Blog article deleted successfully',
+        description: 'Article deleted successfully',
       });
     } catch (error) {
       console.error('Error deleting blog article:', error);
@@ -275,11 +259,11 @@ const BlogManagement = () => {
                 <tr key={article.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center">
-                      {article.image_url ? (
+                      {article.image ? (
                         <img 
-                          src={article.image_url} 
+                          src={article.image} 
                           alt={article.title} 
-                          className="h-10 w-10 rounded object-cover mr-3"
+                          className="h-10 w-10 rounded object-cover"
                         />
                       ) : (
                         <div className="h-10 w-10 rounded bg-gray-200 flex items-center justify-center text-gray-500 mr-3">
@@ -389,13 +373,13 @@ const BlogManagement = () => {
               <p className="text-xs text-gray-500">Use double line breaks to create new paragraphs</p>
             </div>
             <div className="space-y-2">
-              <label htmlFor="image_url" className="text-sm font-medium text-gray-700">Featured Image URL</label>
+              <label htmlFor="image" className="text-sm font-medium text-gray-700">Featured Image URL</label>
               <Input
-                id="image_url"
-                name="image_url"
-                value={formData.image_url}
-                onChange={handleInputChange}
-                placeholder="https://example.com/image.jpg"
+                id="image"
+                value={formData.image}
+                onChange={(e) => setFormData({...formData, image: e.target.value})}
+                placeholder="Image URL"
+                className="mt-1"
               />
             </div>
             <DialogFooter className="pt-4">

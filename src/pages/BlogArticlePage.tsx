@@ -5,16 +5,18 @@ import { ArrowLeft, Calendar, User } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { blogApi } from '@/lib/api';
 
 interface BlogArticle {
-  id: string;
+  id: number;
   title: string;
   content: string;
   excerpt: string;
-  image_url?: string;
+  image?: string;
   author?: string;
   published_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const BlogArticlePage = () => {
@@ -25,25 +27,29 @@ const BlogArticlePage = () => {
 
   useEffect(() => {
     const fetchArticle = async () => {
+      if (!articleId) return;
+      
       try {
-        const { data, error } = await supabase
-          .from('blog_articles')
-          .select('*')
-          .eq('id', articleId)
-          .single();
-
-        if (error) {
-          console.error("Error fetching article:", error);
-          // Try to get from static data instead
-          const staticArticles = [
-            {
-              id: '1',
+        const response = await blogApi.getPost(articleId);
+        
+        if (response.data) {
+          setArticle(response.data);
+          setLoading(false);
+          return;
+        }
+        
+        // If no data from API, use static data
+        const staticArticles = [
+          {
+            id: 1,
               title: 'The Secret to Perfect Cupcake Frosting',
               excerpt: 'Learn the techniques professional bakers use to create beautiful cupcake frosting every time.',
               content: 'Frosting is an art form that takes practice to master. The key to perfect frosting lies in the temperature of your butter and the consistency of your mixture. Start with butter that is at room temperature, but not too soft. Beat it for several minutes until it becomes light and fluffy before adding your powdered sugar gradually. For the creamiest frosting, add a splash of heavy cream and vanilla extract. The final step is to use the right piping tips and techniques to create beautiful decorative patterns.\n\nOne of the most common mistakes people make when frosting cupcakes is using butter that is too warm. This results in a runny frosting that won\'t hold its shape. If your butter is too soft, place it in the refrigerator for 5-10 minutes to firm up slightly before beginning.\n\nAnother important factor is the ratio of butter to sugar. Too much sugar will make your frosting too sweet and grainy, while too little will result in a frosting that\'s too buttery and won\'t hold its shape. A good starting point is a 1:2 ratio of butter to sugar, but you can adjust based on your preferences.\n\nWhen it comes to flavoring your frosting, the possibilities are endless. Vanilla is a classic, but don\'t be afraid to experiment with different extracts, citrus zest, spices, or even melted chocolate. Just be careful not to add too much liquid, as this can affect the consistency.\n\nFinally, invest in a set of quality piping tips and practice different techniques. The classic swirl is achieved with a large star tip, but you can create beautiful designs with round tips, petal tips, and more. With practice, you\'ll be creating professional-looking cupcakes in no time!',
-              image_url: 'https://images.unsplash.com/photo-1557925923-cd4648e211a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=736&q=80',
+              image: 'https://images.unsplash.com/photo-1557925923-cd4648e211a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=736&q=80',
               author: 'LaKeisha Johnson',
-              published_at: '2023-06-15T00:00:00Z'
+              published_at: '2023-06-15T00:00:00Z',
+              created_at: '2023-06-15T00:00:00Z',
+              updated_at: '2023-06-15T00:00:00Z'
             },
             {
               id: '2',
@@ -75,9 +81,6 @@ const BlogArticlePage = () => {
               variant: "destructive",
             });
           }
-        } else {
-          setArticle(data as BlogArticle);
-        }
       } catch (error) {
         console.error("Error:", error);
         toast({
@@ -170,7 +173,7 @@ const BlogArticlePage = () => {
           {article.image_url && (
             <div className="mb-8 rounded-xl overflow-hidden">
               <img 
-                src={article.image_url} 
+                src={article.image} 
                 alt={article.title} 
                 className="w-full h-auto max-h-[500px] object-cover"
               />

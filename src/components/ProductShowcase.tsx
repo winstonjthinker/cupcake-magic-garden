@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
-import { supabase } from '@/integrations/supabase/client';
+import { productsApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 const fallbackProducts = [
@@ -57,28 +57,32 @@ const ProductShowcase = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .limit(6);
+        const response = await productsApi.getProducts({ 
+          limit: 6, 
+          is_featured: true,
+          is_available: true
+        });
         
-        if (error) {
-          console.error('Error fetching products:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load products. Using default data.",
-            variant: "destructive"
-          });
-          setProducts(fallbackProducts);
+        if (response.data && response.data.results && response.data.results.length > 0) {
+          const formattedProducts = response.data.results.map((product) => ({
+            id: product.id,
+            image_url: product.image || `https://source.unsplash.com/random/400x300/?cupcake,${product.name.split(' ').join(',')}`,
+            name: product.name,
+            description: product.description,
+            price: parseFloat(product.price).toFixed(2)
+          }));
+          setProducts(formattedProducts);
         } else {
-          if (data && data.length > 0) {
-            setProducts(data);
-          } else {
-            setProducts(fallbackProducts);
-          }
+          console.log('No featured products found, using fallback data');
+          setProducts(fallbackProducts);
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching products:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load products. Using default data.",
+          variant: "destructive"
+        });
         setProducts(fallbackProducts);
       } finally {
         setLoading(false);
@@ -87,6 +91,33 @@ const ProductShowcase = () => {
     
     fetchProducts();
   }, [toast]);
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-gradient-to-b from-white to-cupcake-cream">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-pacifico text-cupcake-darkPink mb-3">Top Trending Treats</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Our most popular handcrafted creations that customers can't get enough of.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="h-48 bg-gray-200 animate-pulse"></div>
+                <div className="p-6">
+                  <div className="h-6 bg-gray-200 rounded w-3/4 mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-16 bg-gradient-to-b from-white to-cupcake-cream">
@@ -97,24 +128,18 @@ const ProductShowcase = () => {
             Our most popular handcrafted creations that customers can't get enough of.
           </p>
         </div>
-        
-        {loading ? (
-          <div className="text-center py-8">
-            <p>Loading products...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map(product => (
-              <ProductCard 
-                key={product.id}
-                image={product.image_url || `https://source.unsplash.com/random/300x300/?${product.name.replace(/\s+/g, '-').toLowerCase()}`}
-                title={product.name}
-                description={product.description || ""}
-                price={`$${parseFloat(product.price).toFixed(2)}`}
-              />
-            ))}
-          </div>
-        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {products.map((product) => (
+            <ProductCard
+              key={product.id}
+              id={product.id}
+              imageUrl={product.image_url}
+              name={product.name}
+              description={product.description || ""}
+              price={`$${parseFloat(product.price).toFixed(2)}`}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

@@ -1,11 +1,11 @@
-
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import { TabsContent } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   LogOut, 
   Package, 
@@ -18,7 +18,7 @@ import {
   UserCog
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import ProductManagement from '@/components/admin/ProductManagement';
 import BlogManagement from '@/components/admin/BlogManagement';
 import AdminUserManagement from '@/components/admin/AdminUserManagement';
@@ -26,87 +26,52 @@ import AdminUserManagement from '@/components/admin/AdminUserManagement';
 const AdminPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthenticating, setIsAuthenticating] = useState(true);
+  const { isAuthenticated, isAdmin, logout } = useAuth();
   
   useEffect(() => {
-    const checkAuth = async () => {
-      setIsAuthenticating(true);
-      
-      try {
-        // Check if user is logged in with stored credentials
-        const storedEmail = localStorage.getItem('adminEmail');
-        
-        if (!storedEmail) {
-          // No stored credentials, redirect to login
-          redirectToLogin("Please login to access the admin dashboard");
-          return;
-        }
-        
-        // Verify the admin user exists in the database
-        const { data, error } = await supabase
-          .from('admin_users')
-          .select('email')
-          .eq('email', storedEmail)
-          .maybeSingle();
-        
-        if (error || !data) {
-          // Invalid stored credentials, redirect to login
-          localStorage.removeItem('adminEmail');
-          redirectToLogin("Invalid admin credentials. Please login again.");
-          return;
-        }
-        
-        // Admin is authenticated
-        setIsAuthenticated(true);
-      } catch (error) {
-        console.error("Authentication check error:", error);
-        redirectToLogin("Authentication error. Please try again.");
-      } finally {
-        setIsAuthenticating(false);
-      }
-    };
-    
-    const redirectToLogin = (message: string) => {
+    // Redirect to login if not authenticated or not admin
+    if (!isAuthenticated || !isAdmin) {
       toast({
-        title: "Authentication required",
-        description: message,
+        title: "Access Denied",
+        description: "You must be an admin to access this page.",
         variant: "destructive",
         duration: 3000,
       });
-      navigate('/login');
-    };
-    
-    checkAuth();
+      navigate('/login', { state: { from: '/admin' } });
+      return;
+    }
     
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-  }, [navigate, toast]);
+  }, [isAuthenticated, isAdmin, navigate, toast]);
   
-  const handleLogout = () => {
-    localStorage.removeItem('adminEmail');
-    localStorage.removeItem('isAdminLoggedIn');
-    
-    toast({
-      title: "Logged out successfully",
-      description: "You have been logged out of the admin area",
-      duration: 3000,
-    });
-    
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of the admin area",
+        duration: 3000,
+      });
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout Failed",
+        description: "There was an error logging out. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
   };
   
-  if (isAuthenticating) {
+  if (!isAuthenticated || !isAdmin) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cupcake-darkPink"></div>
-        <p className="mt-4 text-gray-600">Verifying admin access...</p>
+        <p className="mt-4 text-gray-600">Redirecting to login...</p>
       </div>
     );
-  }
-  
-  if (!isAuthenticated) {
-    return null; // Don't render anything while checking authentication
   }
   
   return (

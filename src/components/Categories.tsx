@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { Link, useNavigate } from 'react-router-dom';
+import { productsApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+
+interface Category {
+  id: string | number;
+  name: string;
+  description?: string;
+  image?: string;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  // Add other response properties if needed
+}
 
 const fallbackCategories = [
   {
@@ -36,60 +49,83 @@ const fallbackCategories = [
 ];
 
 const Categories = () => {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<(Category & { color: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data, error } = await supabase
-          .from('categories')
-          .select('*');
+        const response = await productsApi.getCategories();
         
-        if (error) {
-          console.error('Error fetching categories:', error);
-          toast({
-            title: "Error",
-            description: "Failed to load categories. Using default data.",
-            variant: "destructive"
-          });
-          setCategories(fallbackCategories);
+        if (response.data && Array.isArray(response.data) && response.data.length > 0) {
+          const colors = [
+            'from-pink-500 to-pink-700',
+            'from-purple-500 to-purple-700',
+            'from-blue-500 to-blue-700',
+            'from-green-500 to-green-700',
+          ];
+          
+          const categoriesWithColors = response.data.map((category: Category, index: number) => ({
+            ...category,
+            color: colors[index % colors.length],
+          }));
+          
+          setCategories(categoriesWithColors);
         } else {
-          if (data && data.length > 0) {
-            const colors = [
-              'from-cupcake-pink/30 to-cupcake-darkPink/80',
-              'from-cupcake-blue/30 to-cupcake-darkBlue/80',
-              'from-purple-300/30 to-purple-700/80',
-              'from-amber-300/30 to-amber-700/80'
-            ];
-            
-            const categoriesWithColors = data.map((category, index) => ({
-              ...category,
-              color: colors[index % colors.length]
-            }));
-            
-            setCategories(categoriesWithColors);
-          } else {
-            setCategories(fallbackCategories);
-          }
+          // Use fallback categories if API returns no data
+          setCategories(fallbackCategories);
         }
-      } catch (error) {
-        console.error('Error:', error);
+      } catch (error: any) {
+        console.error('Error fetching categories:', error);
+        
+        if (error.response?.status === 401) {
+          // If not authenticated, use fallback data
+          toast({
+            title: 'Notice',
+            description: 'Using sample category data. Sign in for full features.',
+            variant: 'default',
+          });
+        } else {
+          // Handle other errors
+          toast({
+            title: 'Error',
+            description: 'Failed to load categories. Using sample data.',
+            variant: 'destructive',
+          });
+        }
+        
+        // Use fallback categories in case of any error
         setCategories(fallbackCategories);
       } finally {
         setLoading(false);
       }
     };
-    
-    fetchCategories();
-  }, [toast]);
+
+    // Only fetch if authenticated, otherwise use fallback
+    if (isAuthenticated) {
+      fetchCategories();
+    } else {
+      setCategories(fallbackCategories);
+      setLoading(false);
+    }
+  }, [isAuthenticated, toast]);
 
   if (loading) {
     return (
       <section id="categories" className="py-16 bg-white">
-        <div className="container mx-auto px-4 text-center">
-          <p>Loading categories...</p>
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-gray-100 rounded-lg p-6 animate-pulse h-64">
+                <div className="h-32 bg-gray-300 rounded mb-4"></div>
+                <div className="h-4 bg-gray-300 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-full"></div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     );
@@ -115,7 +151,7 @@ const Categories = () => {
             >
               <div className={`absolute inset-0 bg-gradient-to-b ${category.color} opacity-75 transition-opacity group-hover:opacity-90`}></div>
               <img 
-                src={category.image_url || `https://source.unsplash.com/random/300x300/?${category.name.replace(/\s+/g, '-').toLowerCase()}`}
+                src={category.image || `https://source.unsplash.com/random/300x300/?${category.name.replace(/\s+/g, '-').toLowerCase()}`}
                 alt={category.name} 
                 className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
               />

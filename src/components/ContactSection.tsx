@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { supabase } from '@/integrations/supabase/client';
+import { contactApi } from '@/lib/api';
 import {
   Form,
   FormControl,
@@ -47,11 +47,13 @@ const ContactSection = () => {
     setIsSubmitting(true);
 
     try {
-      // Save the contact message to Supabase (if we had a contact_messages table)
-      // For now, we'll simulate a successful submission with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      console.log("Contact form data:", data);
+      // Send the contact message to the Django backend
+      await contactApi.sendContactMessage({
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message
+      });
       
       // Show success message
       toast({

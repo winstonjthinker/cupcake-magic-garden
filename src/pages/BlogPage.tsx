@@ -4,17 +4,19 @@ import { Calendar, ChevronLeft, Clock } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
+import { blogApi } from '@/lib/api';
 import { Link } from 'react-router-dom';
 
 interface BlogArticle {
-  id: string;
+  id: number;
   title: string;
   content: string;
   excerpt: string;
-  image_url?: string;
+  image?: string;
   author?: string;
   published_at: string;
+  created_at: string;
+  updated_at: string;
 }
 
 const BlogPage = () => {
@@ -25,28 +27,23 @@ const BlogPage = () => {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const { data, error } = await supabase
-          .from('blog_articles')
-          .select('*')
-          .order('published_at', { ascending: false });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data && data.length > 0) {
-          setArticles(data as BlogArticle[]);
+        const response = await blogApi.getPosts({ ordering: '-published_at' });
+        
+        if (response.data && response.data.length > 0) {
+          setArticles(response.data);
         } else {
           // If no articles in database, use static data
           setArticles([
             {
-              id: '1',
+              id: 1,
               title: 'The Secret to Perfect Cupcake Frosting',
               excerpt: 'Learn the techniques professional bakers use to create beautiful cupcake frosting every time.',
               content: 'Frosting is an art form that takes practice to master. The key to perfect frosting lies in the temperature of your butter and the consistency of your mixture. Start with butter that is at room temperature, but not too soft. Beat it for several minutes until it becomes light and fluffy before adding your powdered sugar gradually. For the creamiest frosting, add a splash of heavy cream and vanilla extract. The final step is to use the right piping tips and techniques to create beautiful decorative patterns.',
-              image_url: 'https://images.unsplash.com/photo-1557925923-cd4648e211a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=736&q=80',
+              image: 'https://images.unsplash.com/photo-1557925923-cd4648e211a0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=736&q=80',
               author: 'LaKeisha Johnson',
-              published_at: '2023-06-15T00:00:00Z'
+              published_at: '2023-06-15T00:00:00Z',
+              created_at: '2023-06-15T00:00:00Z',
+              updated_at: '2023-06-15T00:00:00Z'
             },
             {
               id: '2',
@@ -151,9 +148,9 @@ const BlogPage = () => {
                 >
                   <div className="h-52 overflow-hidden">
                     <img 
-                      src={article.image_url || 'https://images.unsplash.com/photo-1606890658317-7d14490b76fd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1473&q=80'} 
+                      src={article.image || 'https://images.unsplash.com/photo-1588195538326-c5b1e75f8fe7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1740&q=80'} 
                       alt={article.title} 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      className="w-full h-48 object-cover rounded-t-lg"
                     />
                   </div>
                   
