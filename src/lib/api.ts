@@ -36,9 +36,26 @@ interface GetProductsParams {
   ordering?: string;
 }
 
+// Create a separate axios instance for public endpoints
+const publicApi = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  withCredentials: false,
+});
+
 export const productsApi = {
-  getProducts: (params: GetProductsParams = {}) => 
-    api.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { params }),
+  getProducts: (params: GetProductsParams = {}) => {
+    // Use publicApi for featured/available products that don't require auth
+    if (params.is_featured || params.is_available) {
+      return publicApi.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { 
+        params: { 
+          ...params,
+          is_available: true // Ensure we only get available products
+        } 
+      });
+    }
+    // Use authenticated api for other product requests
+    return api.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { params });
+  },
   
   getProduct: (slug: string) => api.get<Product>(`/products/${slug}/`),
   
@@ -70,10 +87,33 @@ export const productsApi = {
   getCategories: () => api.get('/products/categories/'),
 };
 
+export interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  excerpt: string;
+  image?: string;
+  image_url?: string;
+  author?: string;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+  read_time?: number;
+  category?: string;
+  slug: string;
+}
+
+export interface BlogApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export const blogApi = {
-  getPosts: (params?: any) => api.get('/blog/posts/', { params }),
-  getPost: (slug: string) => api.get(`/blog/posts/${slug}/`),
-  getCategories: () => api.get('/blog/categories/'),
+  getPosts: (params?: any) => api.get<BlogApiResponse<BlogPost>>('/blog/posts/', { params }),
+  getPost: (slug: string) => api.get<BlogPost>(`/blog/posts/${slug}/`),
+  getCategories: () => api.get<Array<{ id: number; name: string; slug: string }>>('/blog/categories/'),
 };
 
 export const contactApi = {

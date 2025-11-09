@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     'apps.newsletter',
     'apps.reviews',
     'apps.notifications',
+    'apps.admin_dashboard',
 ]
 
 MIDDLEWARE = [

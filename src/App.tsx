@@ -13,6 +13,7 @@ import RegisterPage from "./pages/RegisterPage";
 import AdminPage from "./pages/AdminPage";
 import BlogPage from "./pages/BlogPage";
 import BlogArticlePage from "./pages/BlogArticlePage";
+import ContactPage from "./pages/ContactPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -75,6 +76,7 @@ const App = () => (
             <Route path="/category/:categoryId" element={<CategoryPage />} />
             <Route path="/blog" element={<BlogPage />} />
             <Route path="/blog/:articleId" element={<BlogArticlePage />} />
+            <Route path="/contact" element={<ContactPage />} />
             
             {/* Auth routes - only accessible when not logged in */}
             <Route path="/login" element={

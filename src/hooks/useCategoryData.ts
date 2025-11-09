@@ -4,16 +4,40 @@ import { productsApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import categoryData from '@/data/categoryData';
 
+type CategoryResponse = {
+  id: number;
+  name: string;
+  description?: string;
+  image?: string;
+  products?: Product[];
+  created_at?: string;
+  updated_at?: string;
+  slug?: string;
+};
+
 // Define proper types for our category data
 export interface Product {
   id: number;
   name: string;
+  title?: string;  // Some endpoints might use title instead of name
   description: string;
-  price: number;
+  price: string;  // Backend returns price as string
+  price_raw?: number;  // Some endpoints might include raw price
   image?: string;
-  category?: number | null;
+  image_url?: string;  // Backend might return image_url instead of image
+  is_available?: boolean;
+  is_featured?: boolean;
+  category?: number | { id: number; name: string } | null;
   created_at?: string;
   updated_at?: string;
+  slug?: string;
+}
+
+interface ApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
 
 export interface Category {
@@ -49,9 +73,49 @@ export const useCategoryData = (categoryId: string | undefined) => {
           
           // Try to fetch products from the API
           try {
-            const response = await productsApi.getProducts({ category: categoryId });
-            if (response.data && response.data.length > 0) {
-              setProducts(response.data);
+            const response = await productsApi.getProducts({ 
+              category: categoryId,
+              is_available: true  // Only fetch available products
+            });
+            
+            // Handle the response based on the API structure
+            const responseData = response.data;
+            let productsData: Product[] = [];
+            
+            if (responseData) {
+              // Handle both paginated and non-paginated responses
+              productsData = Array.isArray(responseData) 
+                ? responseData 
+                : ('results' in responseData ? responseData.results : []);
+            }
+            
+            if (productsData.length > 0) {
+              // Map the API response to our Product type
+              const formattedProducts = productsData.map((product: any) => {
+                const imageSrc = product.image || product.image_url || '';
+                const name = product.name || product.title || 'Unnamed Product';
+                
+                return {
+                  id: product.id,
+                  name: name,
+                  title: product.title || name,
+                  description: product.description || '',
+                  price: product.price || '0.00',
+                  price_raw: product.price_raw || parseFloat(product.price) || 0,
+                  image: imageSrc,
+                  image_url: imageSrc,
+                  is_available: product.is_available ?? true,
+                  is_featured: product.is_featured ?? false,
+                  category: typeof product.category === 'object' 
+                    ? product.category.id 
+                    : product.category,
+                  created_at: product.created_at,
+                  updated_at: product.updated_at,
+                  slug: product.slug || `product-${product.id}`
+                };
+              });
+              
+              setProducts(formattedProducts);
             } else if (staticCategory.products) {
               // Fall back to static products if API returns nothing
               setProducts(staticCategory.products);
@@ -74,8 +138,11 @@ export const useCategoryData = (categoryId: string | undefined) => {
           try {
             // Try to get category by name
             const categoryResponse = await productsApi.getCategories();
-            const foundCategory = categoryResponse.data?.find(
-              (cat: any) => cat.name.toLowerCase() === categoryId.toLowerCase()
+            const categories = Array.isArray(categoryResponse.data) 
+              ? categoryResponse.data 
+              : ('results' in (categoryResponse.data as any) ? (categoryResponse.data as any).results : []);
+            const foundCategory = categories.find(
+              (cat: CategoryResponse) => cat.name.toLowerCase() === categoryId?.toLowerCase()
             );
             
             if (foundCategory) {
@@ -83,11 +150,48 @@ export const useCategoryData = (categoryId: string | undefined) => {
               
               // Fetch products for this category
               const productsResponse = await productsApi.getProducts({ 
-                category: foundCategory.id 
+                category: foundCategory.id,
+                is_available: true  // Only fetch available products
               });
               
-              if (productsResponse.data) {
-                setProducts(productsResponse.data);
+              // Handle the response based on the API structure
+              const responseData = productsResponse.data;
+              let productsData: Product[] = [];
+              
+              if (responseData) {
+                // Handle both paginated and non-paginated responses
+                productsData = Array.isArray(responseData) 
+                  ? responseData 
+                  : ('results' in responseData ? responseData.results : []);
+              }
+              
+              if (productsData.length > 0) {
+                // Map the API response to our Product type
+                const formattedProducts = productsData.map((product: any) => {
+                  const imageSrc = product.image || product.image_url || '';
+                  const name = product.name || product.title || 'Unnamed Product';
+                  
+                  return {
+                    id: product.id,
+                    name: name,
+                    title: product.title || name,
+                    description: product.description || '',
+                    price: product.price || '0.00',
+                    price_raw: product.price_raw || parseFloat(product.price) || 0,
+                    image: imageSrc,
+                    image_url: imageSrc,
+                    is_available: product.is_available ?? true,
+                    is_featured: product.is_featured ?? false,
+                    category: typeof product.category === 'object' 
+                      ? product.category.id 
+                      : product.category,
+                    created_at: product.created_at,
+                    updated_at: product.updated_at,
+                    slug: product.slug || `product-${product.id}`
+                  };
+                });
+                
+                setProducts(formattedProducts);
               }
             } else {
               // If category not found in API, create a fallback
