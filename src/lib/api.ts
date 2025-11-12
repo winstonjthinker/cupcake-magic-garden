@@ -14,6 +14,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  image?: string;
+  is_active: boolean;
+}
+
 interface Product {
   id: number;
   name: string;
@@ -72,19 +81,30 @@ export const productsApi = {
       },
     });
   },
-  updateProduct: (slug: string, data: any) => {
+  updateProduct: (slug: string, data: Partial<Product> & { image?: File | string | null }) => {
     const formData = new FormData();
-    Object.keys(data).forEach(key => {
-      formData.append(key, data[key]);
+    
+    // Handle the image separately since it might be a File object or a string URL
+    if (data.image && typeof data.image !== 'string') {
+      formData.append('image', data.image);
+    }
+    
+    // Handle all other fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'image') return; // Skip image as it's already handled
+      if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
     });
-    return api.patch(`/products/${slug}/`, formData, {
+    
+    return api.patch<Product>(`/products/${slug}/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
-  deleteProduct: (slug: string) => api.delete(`/products/${slug}/`),
-  getCategories: () => api.get('/products/categories/'),
+  deleteProduct: (id: number) => api.delete(`/products/${id}/`),
+  getCategories: () => api.get<Category[]>('/products/categories/'),
 };
 
 export interface BlogPost {

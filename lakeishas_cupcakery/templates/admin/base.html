@@ -30,111 +30,26 @@
             </div>
             
             <nav class="nav-links">
-                <a href="{% url 'admin_dashboard:dashboard' %}" class="{% if current_section == 'dashboard' %}active{% endif %}">
-                    <i class="fas fa-tachometer-alt"></i>
-                    <span>Dashboard</span>
+                <a href="{% url 'admin_dashboard:products' %}" class="{% if current_section == 'products' %}active{% endif %}">
+                    <i class="fas fa-box"></i>
+                    <span>Products</span>
                 </a>
-                
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <i class="fas fa-shopping-bag"></i>
-                        <span>Shop</span>
-                    </div>
-                    <div class="nav-section-links">
-                        <a href="{% url 'admin_dashboard:products' %}" class="{% if current_section == 'products' %}active{% endif %}">
-                            <i class="fas fa-box"></i>
-                            <span>Products</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'orders' %}active{% endif %}">
-                            <i class="fas fa-shopping-cart"></i>
-                            <span>Orders</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'categories' %}active{% endif %}">
-                            <i class="fas fa-tags"></i>
-                            <span>Categories</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <i class="fas fa-users"></i>
-                        <span>Users</span>
-                    </div>
-                    <div class="nav-section-links">
-                        <a href="{% url 'admin_dashboard:users' %}" class="{% if current_section == 'users' %}active{% endif %}">
-                            <i class="fas fa-user-friends"></i>
-                            <span>Manage Users</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'customers' %}active{% endif %}">
-                            <i class="fas fa-users"></i>
-                            <span>Customers</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <i class="fas fa-blog"></i>
-                        <span>Content</span>
-                    </div>
-                    <div class="nav-section-links">
-                        <a href="{% url 'admin_dashboard:blog' %}" class="{% if current_section == 'blog' %}active{% endif %}">
-                            <i class="fas fa-newspaper"></i>
-                            <span>Blog Posts</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'pages' %}active{% endif %}">
-                            <i class="fas fa-file-alt"></i>
-                            <span>Pages</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'media' %}active{% endif %}">
-                            <i class="fas fa-images"></i>
-                            <span>Media Library</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Analytics</span>
-                    </div>
-                    <div class="nav-section-links">
-                        <a href="{% url 'admin_dashboard:analytics' %}" class="{% if current_section == 'analytics' %}active{% endif %}">
-                            <i class="fas fa-chart-bar"></i>
-                            <span>Dashboard</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'reports' %}active{% endif %}">
-                            <i class="fas fa-file-alt"></i>
-                            <span>Reports</span>
-                        </a>
-                    </div>
-                </div>
-                
-                <div class="nav-section">
-                    <div class="nav-section-header">
-                        <i class="fas fa-cog"></i>
-                        <span>Settings</span>
-                    </div>
-                    <div class="nav-section-links">
-                        <a href="{% url 'admin_dashboard:settings' %}" class="{% if current_section == 'settings' %}active{% endif %}">
-                            <i class="fas fa-sliders-h"></i>
-                            <span>General</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'payment' %}active{% endif %}">
-                            <i class="fas fa-credit-card"></i>
-                            <span>Payment</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'shipping' %}active{% endif %}">
-                            <i class="fas fa-truck"></i>
-                            <span>Shipping</span>
-                        </a>
-                        <a href="#" class="{% if current_section == 'email' %}active{% endif %}">
-                            <i class="fas fa-envelope"></i>
-                            <span>Email</span>
-                        </a>
-                    </div>
-                </div>
+                <a href="{% url 'admin_dashboard:users' %}" class="{% if current_section == 'users' %}active{% endif %}">
+                    <i class="fas fa-user-friends"></i>
+                    <span>Manage Users</span>
+                </a>
+                <a href="{% url 'admin_dashboard:blog_list' %}" class="{% if current_section == 'blog' %}active{% endif %}">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Blog Posts</span>
+                </a>
+                <a href="{% url 'admin_dashboard:analytics' %}" class="{% if current_section == 'analytics' %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'admin_dashboard:settings' %}" class="{% if current_section == 'settings' %}active{% endif %}">
+                    <i class="fas fa-sliders-h"></i>
+                    <span>Settings</span>
+                </a>
             </nav>
             
             <div class="sidebar-footer">
@@ -186,9 +101,6 @@
                             <i class="fas fa-chevron-down"></i>
                         </button>
                         <div class="user-dropdown">
-                            <a href="{% url 'admin_dashboard:profile' %}">
-                                <i class="fas fa-user"></i> My Profile
-                            </a>
                             <a href="{% url 'admin_dashboard:settings' %}">
                                 <i class="fas fa-cog"></i> Settings
                             </a>

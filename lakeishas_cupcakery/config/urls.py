@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from apps.admin_dashboard.views import WelcomeView
 import debug_toolbar
 
 # Custom admin site with our dashboard
@@ -26,18 +27,12 @@ admin.site.site_header = "Lakeisha's Cupcakery Admin"
 admin.site.site_title = "Lakeisha's Cupcakery Admin Portal"
 admin.site.index_title = "Welcome to Lakeisha's Cupcakery Admin Portal"
 
-# Import views directly to avoid circular imports
-from apps.admin_dashboard import views as admin_views
-
 urlpatterns = [
-    # Admin dashboard
-    path('admin/', admin_views.admin_dashboard, name='admin_dashboard'),
+    # Root URL - Welcome page
+    path('', WelcomeView.as_view(), name='welcome'),
     
-    # Admin authentication
-    path('admin/login/', admin_views.AdminLoginView.as_view(template_name='admin/login.html'), 
-         name='admin_login'),
-    path('admin/logout/', admin_views.AdminLogoutView.as_view(next_page='admin_login'), 
-         name='admin_logout'),
+    # Admin dashboard app
+    path('admin/', include('apps.admin_dashboard.urls', namespace='admin_dashboard')),
     
     # Original Django admin as fallback
     path('admin/original/', admin.site.urls),

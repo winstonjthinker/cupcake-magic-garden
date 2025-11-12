@@ -1,0 +1,318 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Analytics - Lakeisha's Cupcakery Admin{% endblock %}
+
+{% block page_title %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="card-title">Overview</h5>
+                    <div class="date-range-picker">
+                        <input type="date" id="dateFrom" class="form-control form-control-sm" value="{{ start_date|date:'Y-m-d' }}">
+                        <span class="mx-2">to</span>
+                        <input type="date" id="dateTo" class="form-control form-control-sm" value="{{ end_date|date:'Y-m-d' }}">
+                        <button class="btn btn-primary btn-sm ms-2" id="applyDateRange">Apply</button>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ total_visits|default:0 }}</div>
+                            <div class="stat-label">Total Visits</div>
+                            <div class="stat-change {% if visit_change >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas {% if visit_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i>
+                                {{ visit_change|default:0|floatformat:1 }}% from last period
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ total_orders|default:0 }}</div>
+                            <div class="stat-label">Total Orders</div>
+                            <div class="stat-change {% if order_change >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas {% if order_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i>
+                                {{ order_change|default:0|floatformat:1 }}% from last period
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">${{ total_revenue|default:0|floatformat:2 }}</div>
+                            <div class="stat-label">Total Revenue</div>
+                            <div class="stat-change {% if revenue_change >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas {% if revenue_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i>
+                                {{ revenue_change|default:0|floatformat:1 }}% from last period
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="stat-value">{{ conversion_rate|default:0|floatformat:1 }}%</div>
+                            <div class="stat-label">Conversion Rate</div>
+                            <div class="stat-change {% if conversion_change >= 0 %}positive{% else %}negative{% endif %}">
+                                <i class="fas {% if conversion_change >= 0 %}fa-arrow-up{% else %}fa-arrow-down{% endif %}"></i>
+                                {{ conversion_change|default:0|floatformat:1 }}% from last period
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Traffic & Sales Overview</h5>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="trafficSalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Traffic Sources</h5>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="trafficSourcesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Top Products</h5>
+                    <a href="{% url 'admin_dashboard:products' %}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Sales</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for product in top_products %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ product.image.url|default:'/static/images/placeholder-product.jpg' }}" 
+                                             alt="{{ product.name }}" 
+                                             style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
+                                        <div>
+                                            <h6 class="mb-0">{{ product.name }}</h6>
+                                            <small class="text-muted">{{ product.category.name }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ product.total_sold|default:0 }}</td>
+                                <td>${{ product.total_revenue|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center">No data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Top Referrers</h5>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="referrersChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="card-title mb-0">Recent Activity</h5>
+                    <button class="btn btn-sm btn-outline-primary" id="refreshActivity">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="activity-feed" id="activityFeed">
+                    {% for activity in recent_activity %}
+                    <div class="activity-item">
+                        <div class="activity-icon bg-{{ activity.type }}">
+                            <i class="fas fa-{{ activity.icon }}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p>{{ activity.description }}</p>
+                            <span class="activity-time">{{ activity.time }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                        <p class="text-muted">No recent activity</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Apply date range
+    document.getElementById('applyDateRange').addEventListener('click', function() {
+        const from = document.getElementById('dateFrom').value;
+        const to = document.getElementById('dateTo').value;
+        window.location.href = `?date_from=${from}&date_to=${to}`;
+    });
+
+    // Refresh activity feed
+    document.getElementById('refreshActivity').addEventListener('click', function() {
+        const button = this;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        
+        fetch('{% url "admin_dashboard:activity_feed" %}')
+            .then(response => response.json())
+            .then(data => {
+                const feed = document.getElementById('activityFeed');
+                feed.innerHTML = '';
+                
+                if (data.length === 0) {
+                    feed.innerHTML = `
+                        <div class="text-center py-4">
+                            <i class="fas fa-inbox fa-3x text-muted mb-2"></i>
+                            <p class="text-muted">No recent activity</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                data.forEach(activity => {
+                    const item = document.createElement('div');
+                    item.className = 'activity-item';
+                    item.innerHTML = `
+                        <div class="activity-icon bg-${activity.type}">
+                            <i class="fas fa-${activity.icon}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <p>${activity.description}</p>
+                            <span class="activity-time">${activity.time}</span>
+                        </div>
+                    `;
+                    feed.appendChild(item);
+                });
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-sync-alt"></i> Refresh';
+            });
+    });
+
+    // Initialize charts
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    };
+
+    // Traffic & Sales Chart
+    const trafficSalesCtx = document.getElementById('trafficSalesChart').getContext('2d');
+    new Chart(trafficSalesCtx, {
+        type: 'line',
+        data: {
+            labels: JSON.parse('{{ date_range|default:"[]"|escapejs }}'),
+            datasets: [
+                {
+                    label: 'Visits',
+                    data: JSON.parse('{{ visits_data|default:"[]"|escapejs }}'),
+                    borderColor: '#4e73df',
+                    backgroundColor: 'rgba(78, 115, 223, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                },
+                {
+                    label: 'Orders',
+                    data: JSON.parse('{{ orders_data|default:"[]"|escapejs }}'),
+                    borderColor: '#1cc88a',
+                    backgroundColor: 'rgba(28, 200, 138, 0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3
+                }
+            ]
+        },
+        options: chartOptions
+    });
+
+    // Traffic Sources Chart
+    const trafficSourcesCtx = document.getElementById('trafficSourcesChart').getContext('2d');
+    new Chart(trafficSourcesCtx, {
+        type: 'doughnut',
+        data: {
+            labels: JSON.parse('{{ traffic_sources.labels|default:"[]"|escapejs }}'),
+            datasets: [{
+                data: JSON.parse('{{ traffic_sources.data|default:"[]"|escapejs }}'),
+                backgroundColor: ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b'],
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            ...chartOptions,
+            cutout: '70%'
+        }
+    });
+
+    // Referrers Chart
+    const referrersCtx = document.getElementById('referrersChart').getContext('2d');
+    new Chart(referrersCtx, {
+        type: 'bar',
+        data: {
+            labels: JSON.parse('{{ referrers.labels|default:"[]"|escapejs }}'),
+            datasets: [{
+                label: 'Visits',
+                data: JSON.parse('{{ referrers.data|default:"[]"|escapejs }}'),
+                backgroundColor: '#4e73df'
+            }]
+        },
+        options: chartOptions
+    });
+});
+</script>
+{% endblock %}

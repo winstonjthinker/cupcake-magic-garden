@@ -3,10 +3,9 @@ import { useState, useEffect } from 'react';
 import { productsApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import categoryData from '@/data/categoryData';
+import { Product, Category } from '@/types/product';
 
-type CategoryResponse = {
-  id: number;
-  name: string;
+type CategoryResponse = Category & {
   description?: string;
   image?: string;
   products?: Product[];
@@ -15,39 +14,11 @@ type CategoryResponse = {
   slug?: string;
 };
 
-// Define proper types for our category data
-export interface Product {
-  id: number;
-  name: string;
-  title?: string;  // Some endpoints might use title instead of name
-  description: string;
-  price: string;  // Backend returns price as string
-  price_raw?: number;  // Some endpoints might include raw price
-  image?: string;
-  image_url?: string;  // Backend might return image_url instead of image
-  is_available?: boolean;
-  is_featured?: boolean;
-  category?: number | { id: number; name: string } | null;
-  created_at?: string;
-  updated_at?: string;
-  slug?: string;
-}
-
 interface ApiResponse<T> {
   count: number;
   next: string | null;
   previous: string | null;
   results: T[];
-}
-
-export interface Category {
-  id: number;
-  name: string;
-  description?: string;
-  image?: string;
-  products?: Product[];
-  created_at?: string;
-  updated_at?: string;
 }
 
 export const useCategoryData = (categoryId: string | undefined) => {

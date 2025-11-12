@@ -1,0 +1,296 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+{% load admin_extras %}
+
+{% block title %}Products - Lakeisha's Cupcakery Admin{% endblock %}
+
+{% block page_title %}Product Management{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group" role="group">
+                        <a href="{% url 'admin_dashboard:products' %}" 
+                           class="btn btn-outline-secondary {% if not request.GET.is_available and not request.GET.is_featured and not request.GET.category %}active{% endif %}">
+                            All ({{ total_products }})
+                        </a>
+                        <a href="?is_available=true" 
+                           class="btn btn-outline-success {% if request.GET.is_available == 'true' %}active{% endif %}">
+                            In Stock ({{ available_products }})
+                        </a>
+                        <a href="?is_featured=true" 
+                           class="btn btn-outline-warning {% if request.GET.is_featured == 'true' %}active{% endif %}">
+                            Featured ({{ featured_products }})
+                        </a>
+                    </div>
+                    
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="exportDropdown">
+                            {% for format in export_formats %}
+                            <li>
+                                <a class="dropdown-item" href="?export={{ format.value }}{% for key, value in request.GET.items %}{% if key != 'export' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+                                    <i class="fas fa-file-{{ format.value }} me-2"></i> {{ format.name }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+    <div class="card">
+        <div class="card-body">
+            <a href="{% url 'admin_dashboard:product_add' %}" class="btn btn-primary w-100">
+                <i class="fas fa-plus me-2"></i> Add New Product
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search products..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if current_category == category.id|stringformat:'s' %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="is_available" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="true" {% if is_available == 'true' %}selected{% endif %}>In Stock</option>
+                    <option value="false" {% if is_available == 'false' %}selected{% endif %}>Out of Stock</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="is_featured" class="form-select">
+                    <option value="">All Products</option>
+                    <option value="true" {% if is_featured == 'true' %}selected{% endif %}>Featured</option>
+                    <option value="false" {% if is_featured == 'false' %}selected{% endif %}>Not Featured</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>
+                            <a href="?{% url_replace 'order_by' 'name' %}" class="text-dark text-decoration-none">
+                                Product
+                                {% if current_order == 'name' %}<i class="fas fa-sort-up ms-1"></i>
+                                {% elif current_order == '-name' %}<i class="fas fa-sort-down ms-1"></i>
+                                {% else %}<i class="fas fa-sort ms-1 text-muted"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>Category</th>
+                        <th class="text-end">
+                            <a href="?{% url_replace 'order_by' 'price' %}" class="text-dark text-decoration-none">
+                                Price
+                                {% if current_order == 'price' %}<i class="fas fa-sort-up ms-1"></i>
+                                {% elif current_order == '-price' %}<i class="fas fa-sort-down ms-1"></i>
+                                {% else %}<i class="fas fa-sort ms-1 text-muted"></i>{% endif %}
+                            </a>
+                        </th>
+                        <th>Status</th>
+                        <th>Featured</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                {% if product.image %}
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" 
+                                     style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; margin-right: 10px;">
+                                {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center" 
+                                     style="width: 50px; height: 50px; border-radius: 4px; margin-right: 10px;">
+                                    <i class="fas fa-image text-muted"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ product.name }}</h6>
+                                    <small class="text-muted">{{ product.sku|default:'No SKU' }}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>{{ product.category.name|default:'-' }}</td>
+                        <td class="text-end">
+                            {% if product.sale_price %}
+                                <span class="text-decoration-line-through text-muted me-2">${{ product.price|floatformat:2 }}</span>
+                                <span class="text-danger fw-bold">${{ product.sale_price|floatformat:2 }}</span>
+                            {% else %}
+                                ${{ product.price|floatformat:2 }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge {% if product.is_available %}bg-success{% else %}bg-secondary{% endif %}">
+                                {% if product.is_available %}<i class="fas fa-check-circle me-1"></i> In Stock
+                                {% else %}<i class="fas fa-times-circle me-1"></i> Out of Stock{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            {% if product.is_featured %}
+                                <span class="badge bg-warning"><i class="fas fa-star me-1"></i> Featured</span>
+                            {% else %}
+                                <span class="badge bg-secondary">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group">
+                                <a href="{% url 'admin_dashboard:product_edit' product.id %}" 
+                                   class="btn btn-sm btn-outline-primary" 
+                                   data-bs-toggle="tooltip" 
+                                   title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <button class="btn btn-sm btn-outline-danger delete-product" 
+                                        data-id="{{ product.id }}"
+                                        data-bs-toggle="tooltip" 
+                                        title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                                <a href="#" 
+                                   class="btn btn-sm btn-outline-secondary"
+                                   data-bs-toggle="tooltip" 
+                                   title="View on site">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No products found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}{% if is_available %}&is_available={{ is_available }}{% endif %}{% if is_featured %}&is_featured={{ is_featured }}{% endif %}">
+                            &laquo; First
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_available %}&is_available={{ is_available }}{% endif %}{% if is_featured %}&is_featured={{ is_featured }}{% endif %}">
+                            Previous
+                        </a>
+                    </li>
+                {% endif %}
+                
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_available %}&is_available={{ is_available }}{% endif %}{% if is_featured %}&is_featured={{ is_featured }}{% endif %}">
+                            Next
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}{% if is_available %}&is_available={{ is_available }}{% endif %}{% if is_featured %}&is_featured={{ is_featured }}{% endif %}">
+                            Last &raquo;
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this product? This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteProductForm" method="post" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete Product</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Delete product confirmation
+    const deleteButtons = document.querySelectorAll('.delete-product');
+    const deleteForm = document.getElementById('deleteProductForm');
+    
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const productId = this.getAttribute('data-id');
+            deleteForm.action = `/admin/products/${productId}/delete/`;
+            const modal = new bootstrap.Modal(document.getElementById('deleteProductModal'));
+            modal.show();
+        });
+    });
+
+    // Export products functionality
+    document.getElementById('exportProducts').addEventListener('click', function() {
+        // Get current filters
+        const searchQuery = '{{ search_query|default_if_none:""|escapejs }}';
+        const isAvailable = '{{ is_available|default_if_none:""|escapejs }}';
+        const isFeatured = '{{ is_featured|default_if_none:""|escapejs }}';
+        
+        // Build export URL with current filters
+        let exportUrl = '/admin/products/export/?';
+        if (searchQuery) exportUrl += `q=${encodeURIComponent(searchQuery)}&`;
+        if (isAvailable) exportUrl += `is_available=${isAvailable}&`;
+        if (isFeatured) exportUrl += `is_featured=${isFeatured}`;
+        
+        // Trigger download
+        window.location.href = exportUrl;
+    });
+});
+</script>
+{% endblock %}
