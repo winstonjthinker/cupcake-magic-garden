@@ -14,6 +14,15 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  image?: string;
+  is_active: boolean;
+}
+
 interface Product {
   id: number;
   name: string;
@@ -36,9 +45,26 @@ interface GetProductsParams {
   ordering?: string;
 }
 
+// Create a separate axios instance for public endpoints
+const publicApi = axios.create({
+  baseURL: 'http://localhost:8000/api',
+  withCredentials: false,
+});
+
 export const productsApi = {
-  getProducts: (params: GetProductsParams = {}) => 
-    api.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { params }),
+  getProducts: (params: GetProductsParams = {}) => {
+    // Use publicApi for featured/available products that don't require auth
+    if (params.is_featured || params.is_available) {
+      return publicApi.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { 
+        params: { 
+          ...params,
+          is_available: true // Ensure we only get available products
+        } 
+      });
+    }
+    // Use authenticated api for other product requests
+    return api.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { params });
+  },
   
   getProduct: (slug: string) => api.get<Product>(`/products/${slug}/`),
   
@@ -55,25 +81,59 @@ export const productsApi = {
       },
     });
   },
-  updateProduct: (slug: string, data: any) => {
+  updateProduct: (slug: string, data: Partial<Product> & { image?: File | string | null }) => {
     const formData = new FormData();
-    Object.keys(data).forEach(key => {
-      formData.append(key, data[key]);
+    
+    // Handle the image separately since it might be a File object or a string URL
+    if (data.image && typeof data.image !== 'string') {
+      formData.append('image', data.image);
+    }
+    
+    // Handle all other fields
+    Object.entries(data).forEach(([key, value]) => {
+      if (key === 'image') return; // Skip image as it's already handled
+      if (value !== undefined && value !== null) {
+        formData.append(key, String(value));
+      }
     });
-    return api.patch(`/products/${slug}/`, formData, {
+    
+    return api.patch<Product>(`/products/${slug}/`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
   },
-  deleteProduct: (slug: string) => api.delete(`/products/${slug}/`),
-  getCategories: () => api.get('/products/categories/'),
+  deleteProduct: (id: number) => api.delete(`/products/${id}/`),
+  getCategories: () => api.get<Category[]>('/products/categories/'),
 };
 
+export interface BlogPost {
+  id: number;
+  title: string;
+  content: string;
+  excerpt: string;
+  image?: string;
+  image_url?: string;
+  author?: string;
+  published_at: string;
+  created_at: string;
+  updated_at: string;
+  read_time?: number;
+  category?: string;
+  slug: string;
+}
+
+export interface BlogApiResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export const blogApi = {
-  getPosts: (params?: any) => api.get('/blog/posts/', { params }),
-  getPost: (slug: string) => api.get(`/blog/posts/${slug}/`),
-  getCategories: () => api.get('/blog/categories/'),
+  getPosts: (params?: any) => api.get<BlogApiResponse<BlogPost>>('/blog/posts/', { params }),
+  getPost: (slug: string) => api.get<BlogPost>(`/blog/posts/${slug}/`),
+  getCategories: () => api.get<Array<{ id: number; name: string; slug: string }>>('/blog/categories/'),
 };
 
 export const contactApi = {

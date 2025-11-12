@@ -1,0 +1,66 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}Admin Login | {{ site_title|default:"Cupcakery Admin" }}{% endblock %}
+
+{% block page_title %}Admin Login{% endblock %}
+
+{% block extra_css %}
+<style>
+  .login-wrapper { max-width: 420px; margin: 60px auto; background: #fff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; }
+  .login-header { padding: 28px 28px 0; text-align: center; }
+  .login-header .icon { font-size: 52px; color: #d87093; margin-bottom: 10px; }
+  .login-header h2 { margin: 6px 0 4px; font-weight: 700; }
+  .login-header p { color: #666; margin: 0 0 8px; }
+  .login-body { padding: 24px 28px 30px; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .form-control { width: 100%; padding: 12px 14px; border: 1px solid #e3e3e3; border-radius: 8px; font-size: 15px; }
+  .form-control:focus { outline: none; border-color: #d87093; box-shadow: 0 0 0 3px rgba(216,112,147,0.12); }
+  .btn-primary { width: 100%; background: #d87093; color: #fff; border: none; padding: 12px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #c45d7d; }
+  .login-footer { text-align: center; padding: 0 28px 24px; color: #888; font-size: 14px; }
+  .errors { background: #ffe8e8; color: #8a1f1f; border: 1px solid #ffc9c9; padding: 10px 12px; border-radius: 8px; margin-bottom: 14px; }
+  .help { font-size: 13px; color: #777; margin-top: 6px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="login-wrapper">
+    <div class="login-header">
+      <div class="icon"><i class="fas fa-cupcake"></i></div>
+      <h2>Welcome back</h2>
+      <p>Sign in to manage Lakeisha's Cupcakery</p>
+    </div>
+    <div class="login-body">
+      {% if form.non_field_errors %}
+      <div class="errors">
+        {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="post" action="">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ next|default:request.GET.next }}">
+
+        <div class="form-group">
+          <label for="id_username">Email or Username</label>
+          <input autofocus class="form-control" type="text" name="username" id="id_username" required>
+        </div>
+
+        <div class="form-group">
+          <label for="id_password">Password</label>
+          <input class="form-control" type="password" name="password" id="id_password" required>
+          <div class="help"><a href="#">Forgot password?</a></div>
+        </div>
+
+        <button class="btn-primary" type="submit">Sign in</button>
+      </form>
+    </div>
+    <div class="login-footer">
+      Need an account? Ask your administrator for access.
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,398 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}Dashboard | {{ block.super }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root {
+    --cupcake-pink: #ffb6c1;
+    --cupcake-darkPink: #d87093;
+    --cupcake-blue: #87ceeb;
+    --cupcake-darkBlue: #4682b4;
+    --cupcake-purple: #9370db;
+    --cupcake-amber: #ffbf00;
+    --cupcake-green: #77dd77;
+    --light-bg: #f8f9fa;
+    --card-bg: #ffffff;
+    --text-dark: #333333;
+    --text-light: #6c757d;
+    --border-radius: 12px;
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
+}
+
+.dashboard-container {
+    padding: 20px;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    color: var(--cupcake-darkBlue);
+    font-size: 28px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+    border-left: 5px solid;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card.orders { border-color: var(--cupcake-darkPink); }
+.stat-card.revenue { border-color: var(--cupcake-darkBlue); }
+.stat-card.products { border-color: var(--cupcake-purple); }
+.stat-card.customers { border-color: var(--cupcake-amber); }
+
+.stat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.stat-title {
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.stat-card.orders .stat-icon { background: var(--cupcake-darkPink); }
+.stat-card.revenue .stat-icon { background: var(--cupcake-darkBlue); }
+.stat-card.products .stat-icon { background: var(--cupcake-purple); }
+.stat-card.customers .stat-icon { background: var(--cupcake-amber); }
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 10px 0 5px;
+    color: var(--text-dark);
+}
+
+.stat-change {
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.positive { color: var(--cupcake-green); }
+.negative { color: #ff6b6b; }
+
+.dashboard-sections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.dashboard-section {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: var(--cupcake-darkBlue);
+    font-size: 18px;
+}
+
+.view-all {
+    font-size: 14px;
+    color: var(--cupcake-blue);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.view-all:hover {
+    color: var(--cupcake-darkBlue);
+    text-decoration: underline;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Dashboard Overview</h1>
+        <div class="last-updated">Last updated: {% now "F j, Y, g:i a" %}</div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <!-- Total Orders -->
+        <div class="stat-card orders">
+            <div class="stat-header">
+                <span class="stat-title">Total Orders</span>
+                <div class="stat-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                </div>
+            </div>
+            <div class="stat-value">{{ total_orders|default:"0" }}</div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>12.5% from last month</span>
+            </div>
+            <h3>Top Selling Products</h3>
+            <a href="{% url 'admin_dashboard:products' %}" class="view-all">View All Products</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Sales</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in top_products|slice:":5" %}
+                    <tr>
+                        <td>{{ product.name|default:"N/A" }}</td>
+                        <td>{{ product.category.name|default:"N/A" }}</td>
+                        <td>${{ product.price|default:"0.00"|floatformat:2 }}</td>
+                        <td>{{ product.stock|default:"0" }}</td>
+                        <td>{{ product.sales_count|default:"0" }} sold</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No products found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+                    <!-- Blog Tab -->
+                    <!-- Recent Blog Posts Section -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Recent Blog Posts</h3>
+            <a href="{% url 'admin_dashboard:blog_list' %}" class="view-all">View All Posts</a>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Published Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in recent_posts|slice:":5" %}
+                    <tr>
+                        <td>{{ post.title|truncatewords:5 }}</td>
+                        <td>{{ post.author.get_full_name|default:post.author.username }}</td>
+                        <td>{{ post.published_date|date:"M d, Y"|default:"Draft" }}</td>
+                        <td>
+                            <span class="status-badge status-{{ post.status|default:'draft' }}">
+                                {{ post.get_status_display|default:"Draft" }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_dashboard:post_edit' post.id %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No blog posts found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+                    <!-- Admin Tab -->
+                    
+                    <!-- Analytics Tab -->
+                    <!-- Sales Analytics Section -->
+    <div class="dashboard-section">
+        <div class="section-header">
+            <h3>Sales Analytics</h3>
+            <a href="{% url 'admin_dashboard:dashboard' %}" class="view-all">View Full Report</a>
+        </div>
+        <div class="chart-container" style="height: 300px;">
+            <canvas id="revenueChart"></canvas>
+        </div>
+    </div>
+                </div>
+
+        <!-- Dashboard Content -->
+    <div class="dashboard-sections
+        <!-- Recent Orders Section -->
+        <div class="recent-orders">
+            <div class="section-header">
+                <h3>Recent Orders</h3>
+                <a href="{% url 'admin_dashboard:orders' %}" class="view-all">View All</a>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Order #</th>
+                            <th>Customer</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders|slice:":5" %}
+                        <tr>
+                            <td>{{ order.order_number|truncatechars:8 }}</td>
+                            <td>{{ order.customer_name|default:"Guest"|truncatechars:15 }}</td>
+                            <td>${{ order.total|floatformat:2 }}</td>
+                            <td><span class="status-badge status-{{ order.status|lower }}">{{ order.get_status_display }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">No recent orders</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Featured Products -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Featured Products</h3>
+                <div class="card-tools">
+                    <a href="{% url 'admin_dashboard:products' %}" class="btn btn-tool">
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in featured_products %}
+                        <tr>
+                            <td>{{ product.name|truncatechars:20 }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>${{ product.price }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center">No featured products</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+            <!-- JavaScript for Charts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue ($)',
+                        data: [1200, 1900, 1500, 2500, 2200, 3000],
+                        borderColor: 'rgba(70, 130, 180, 1)',
+                        backgroundColor: 'rgba(70, 130, 180, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                drawBorder: false
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</div> <!-- End of .dashboard-container -->
+{% endblock %}

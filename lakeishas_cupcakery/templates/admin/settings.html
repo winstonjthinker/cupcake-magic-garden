@@ -1,0 +1,893 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Settings - Lakeisha's Cupcakery Admin{% endblock %}
+
+{% block page_title %}Site Settings{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-3">
+        <div class="list-group" id="settingsMenu">
+            <a class="list-group-item list-group-item-action active" data-bs-toggle="list" href="#general">
+                <i class="fas fa-cog me-2"></i> General
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#store">
+                <i class="fas fa-store me-2"></i> Store
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#shipping">
+                <i class="fas fa-truck me-2"></i> Shipping
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#payments">
+                <i class="fas fa-credit-card me-2"></i> Payments
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#email">
+                <i class="fas fa-envelope me-2"></i> Email
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#seo">
+                <i class="fas fa-search me-2"></i> SEO
+            </a>
+            <a class="list-group-item list-group-item-action" data-bs-toggle="list" href="#social">
+                <i class="fas fa-share-alt me-2"></i> Social Media
+            </a>
+            <a class="list-group-item list-group-item-action text-danger" data-bs-toggle="list" href="#danger">
+                <i class="fas fa-exclamation-triangle me-2"></i> Danger Zone
+            </a>
+        </div>
+    </div>
+    <div class="col-lg-9">
+        <form method="post" enctype="multipart/form-data" id="settingsForm">
+            {% csrf_token %}
+            <div class="tab-content">
+                <!-- General Settings -->
+                <div class="tab-pane fade show active" id="general">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">General Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Site Title</label>
+                                <input type="text" class="form-control" name="site_title" value="{{ settings.SITE_TITLE }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Site Description</label>
+                                <textarea class="form-control" name="site_description" rows="3">{{ settings.SITE_DESCRIPTION }}</textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Site Logo</label>
+                                        <div class="d-flex align-items-center">
+                                            <img id="logoPreview" src="{{ settings.SITE_LOGO.url|default:'/static/images/logo.png' }}" 
+                                                 class="img-thumbnail me-3" style="max-height: 60px;">
+                                            <div>
+                                                <input type="file" class="form-control" name="site_logo" accept="image/*" onchange="previewImage(this, 'logoPreview')">
+                                                <small class="text-muted">Recommended size: 200x50px</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Favicon</label>
+                                        <div class="d-flex align-items-center">
+                                            <img id="faviconPreview" src="{{ settings.FAVICON.url|default:'/static/images/favicon.ico' }}" 
+                                                 class="img-thumbnail me-3" style="width: 32px; height: 32px;">
+                                            <div>
+                                                <input type="file" class="form-control" name="favicon" accept="image/x-icon,image/vnd.microsoft.icon" onchange="previewImage(this, 'faviconPreview')">
+                                                <small class="text-muted">Must be .ico, 32x32px</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Admin Email</label>
+                                <input type="email" class="form-control" name="admin_email" value="{{ settings.ADMIN_EMAIL }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Timezone</label>
+                                <select class="form-select" name="timezone">
+                                    {% for tz in timezones %}
+                                    <option value="{{ tz }}" {% if tz == settings.TIME_ZONE %}selected{% endif %}>{{ tz }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Store Settings -->
+                <div class="tab-pane fade" id="store">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Store Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Store Name</label>
+                                        <input type="text" class="form-control" name="store_name" value="{{ settings.STORE_NAME }}" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Store Email</label>
+                                        <input type="email" class="form-control" name="store_email" value="{{ settings.STORE_EMAIL }}" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Store Phone</label>
+                                        <input type="text" class="form-control" name="store_phone" value="{{ settings.STORE_PHONE }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Currency</label>
+                                        <select class="form-select" name="currency">
+                                            <option value="USD" {% if settings.CURRENCY == 'USD' %}selected{% endif %}>US Dollar ($)</option>
+                                            <option value="EUR" {% if settings.CURRENCY == 'EUR' %}selected{% endif %}>Euro (€)</option>
+                                            <option value="GBP" {% if settings.CURRENCY == 'GBP' %}selected{% endif %}>British Pound (£)</option>
+                                            <option value="ZAR" {% if settings.CURRENCY == 'ZAR' %}selected{% endif %}>South African Rand (R)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Store Address</label>
+                                <textarea class="form-control" name="store_address" rows="3">{{ settings.STORE_ADDRESS }}</textarea>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="store_status" id="storeStatus" 
+                                       {% if settings.STORE_STATUS %}checked{% endif %}>
+                                <label class="form-check-label" for="storeStatus">Store Status</label>
+                                <small class="d-block text-muted">When disabled, the store will show a maintenance message to customers.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Settings -->
+                <div class="tab-pane fade" id="shipping">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Shipping Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Shipping Methods</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="shipping_methods" value="standard" 
+                                           id="standardShipping" {% if 'standard' in settings.SHIPPING_METHODS %}checked{% endif %}>
+                                    <label class="form-check-label" for="standardShipping">
+                                        Standard Shipping
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="shipping_methods" value="express" 
+                                           id="expressShipping" {% if 'express' in settings.SHIPPING_METHODS %}checked{% endif %}>
+                                    <label class="form-check-label" for="expressShipping">
+                                        Express Shipping
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="shipping_methods" value="pickup" 
+                                           id="pickupShipping" {% if 'pickup' in settings.SHIPPING_METHODS %}checked{% endif %}>
+                                    <label class="form-check-label" for="pickupShipping">
+                                        Local Pickup
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Shipping Rates</h6>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Shipping Zone</th>
+                                                <th>Standard</th>
+                                                <th>Express</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for zone in shipping_zones %}
+                                            <tr>
+                                                <td>{{ zone.name }}</td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">{{ settings.CURRENCY_SYMBOL }}</span>
+                                                        <input type="number" class="form-control" 
+                                                               name="shipping_rate_{{ zone.code }}_standard" 
+                                                               value="{{ zone.rates.standard }}" min="0" step="0.01">
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="input-group">
+                                                        <span class="input-group-text">{{ settings.CURRENCY_SYMBOL }}</span>
+                                                        <input type="number" class="form-control" 
+                                                               name="shipping_rate_{{ zone.code }}_express" 
+                                                               value="{{ zone.rates.express }}" min="0" step="0.01">
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="free_shipping_enabled" 
+                                       id="freeShipping" {% if settings.FREE_SHIPPING_ENABLED %}checked{% endif %}>
+                                <label class="form-check-label" for="freeShipping">Enable Free Shipping</label>
+                            </div>
+
+                            <div id="freeShippingOptions" class="{% if settings.FREE_SHIPPING_ENABLED %}d-block{% else %}d-none{% endif %}">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Minimum Order Amount</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text">{{ settings.CURRENCY_SYMBOL }}</span>
+                                                <input type="number" class="form-control" name="free_shipping_min_amount" 
+                                                       value="{{ settings.FREE_SHIPPING_MIN_AMOUNT|default:'0' }}" min="0" step="0.01">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">Applies To</label>
+                                            <select class="form-select" name="free_shipping_applies_to">
+                                                <option value="all" {% if settings.FREE_SHIPPING_APPLIES_TO == 'all' %}selected{% endif %}>All Orders</option>
+                                                <option value="domestic" {% if settings.FREE_SHIPPING_APPLIES_TO == 'domestic' %}selected{% endif %}>Domestic Orders Only</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Settings -->
+                <div class="tab-pane fade" id="payments">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Payment Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Payment Methods</h6>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="payment_methods" value="credit_card" 
+                                           id="creditCard" {% if 'credit_card' in settings.PAYMENT_METHODS %}checked{% endif %}>
+                                    <label class="form-check-label" for="creditCard">
+                                        Credit/Debit Card
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" name="payment_methods" value="paypal" 
+                                           id="paypal" {% if 'paypal' in settings.PAYMENT_METHODS %}checked{% endif %}>
+                                    <label class="form-check-label" for="paypal">
+                                        PayPal
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="payment_methods" value="bank_transfer" 
+                                           id="bankTransfer" {% if 'bank_transfer' in settings.PAYMENT_METHODS %}checked{% endif %}>
+                                    <label class="form-check-label" for="bankTransfer">
+                                        Bank Transfer
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Stripe Settings</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Stripe Publishable Key</label>
+                                    <input type="text" class="form-control" name="stripe_publishable_key" 
+                                           value="{{ settings.STRIPE_PUBLISHABLE_KEY }}" placeholder="pk_test_...">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Stripe Secret Key</label>
+                                    <input type="password" class="form-control" name="stripe_secret_key" 
+                                           value="{{ settings.STRIPE_SECRET_KEY }}" placeholder="sk_test_...">
+                                </div>
+                                <div class="form-text text-muted">
+                                    <small>You can find your API keys in the <a href="https://dashboard.stripe.com/apikeys" target="_blank">Stripe Dashboard</a>.</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>PayPal Settings</h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="paypal_sandbox" 
+                                           id="paypalSandbox" {% if settings.PAYPAL_SANDBOX %}checked{% endif %}>
+                                    <label class="form-check-label" for="paypalSandbox">Sandbox Mode</label>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">PayPal Client ID</label>
+                                    <input type="text" class="form-control" name="paypal_client_id" 
+                                           value="{{ settings.PAYPAL_CLIENT_ID }}">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">PayPal Secret</label>
+                                    <input type="password" class="form-control" name="paypal_secret" 
+                                           value="{{ settings.PAYPAL_SECRET }}">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Email Settings -->
+                <div class="tab-pane fade" id="email">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Email Settings</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>SMTP Configuration</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP Host</label>
+                                            <input type="text" class="form-control" name="smtp_host" 
+                                                   value="{{ settings.EMAIL_HOST }}" placeholder="smtp.example.com">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP Port</label>
+                                            <input type="number" class="form-control" name="smtp_port" 
+                                                   value="{{ settings.EMAIL_PORT|default:'587' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP Username</label>
+                                            <input type="text" class="form-control" name="smtp_username" 
+                                                   value="{{ settings.EMAIL_HOST_USER }}">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label class="form-label">SMTP Password</label>
+                                            <input type="password" class="form-control" name="smtp_password" 
+                                                   value="{{ settings.EMAIL_HOST_PASSWORD }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" name="smtp_use_tls" 
+                                           id="smtpUseTls" {% if settings.EMAIL_USE_TLS %}checked{% endif %}>
+                                    <label class="form-check-label" for="smtpUseTls">Use TLS</label>
+                                </div>
+                                <div class="form-text text-muted">
+                                    <small>Leave username and password empty to use the server's default mail settings.</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Email Templates</h6>
+                                <div class="table-responsive">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Email Type</th>
+                                                <th>Subject</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for template in email_templates %}
+                                            <tr>
+                                                <td>{{ template.name }}</td>
+                                                <td>{{ template.subject }}</td>
+                                                <td>
+                                                    <button type="button" class="btn btn-sm btn-outline-primary edit-template" 
+                                                            data-id="{{ template.id }}">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="email_notifications" 
+                                       id="emailNotifications" {% if settings.EMAIL_NOTIFICATIONS %}checked{% endif %}>
+                                <label class="form-check-label" for="emailNotifications">Enable Email Notifications</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SEO Settings -->
+                <div class="tab-pane fade" id="seo">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Search Engine Optimization</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <h6>Meta Information</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Meta Title</label>
+                                    <input type="text" class="form-control" name="meta_title" 
+                                           value="{{ settings.META_TITLE }}" maxlength="60">
+                                    <small class="text-muted">Recommended: 50-60 characters</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Meta Description</label>
+                                    <textarea class="form-control" name="meta_description" rows="3" 
+                                              maxlength="160">{{ settings.META_DESCRIPTION }}</textarea>
+                                    <small class="text-muted">Recommended: 150-160 characters</small>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Meta Keywords</label>
+                                    <input type="text" class="form-control" name="meta_keywords" 
+                                           value="{{ settings.META_KEYWORDS }}">
+                                    <small class="text-muted">Comma-separated list of keywords</small>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Social Media</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Social Share Image</label>
+                                    <div class="d-flex align-items-center">
+                                        <img id="socialImagePreview" 
+                                             src="{{ settings.SOCIAL_SHARE_IMAGE.url|default:'/static/images/social-share-default.jpg' }}" 
+                                             class="img-thumbnail me-3" style="max-width: 120px;">
+                                        <div>
+                                            <input type="file" class="form-control" name="social_share_image" 
+                                                   accept="image/*" onchange="previewImage(this, 'socialImagePreview')">
+                                            <small class="text-muted">Recommended size: 1200x630px</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Search Engine Verification</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">Google Search Console</label>
+                                    <input type="text" class="form-control" name="google_site_verification" 
+                                           value="{{ settings.GOOGLE_SITE_VERIFICATION }}" 
+                                           placeholder="e.g., qrZ4d1i7tJ3F5b8p9w0cXyZ1234567890">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Bing Webmaster Tools</label>
+                                    <input type="text" class="form-control" name="bing_webmaster_tools" 
+                                           value="{{ settings.BING_WEBMASTER_TOOLS }}" 
+                                           placeholder="e.g., 1234567890ABCDEF1234567890ABCDEF">
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="enable_sitemap" 
+                                       id="enableSitemap" {% if settings.ENABLE_SITEMAP %}checked{% endif %}>
+                                <label class="form-check-label" for="enableSitemap">Enable XML Sitemap</label>
+                            </div>
+                            <div class="form-text text-muted">
+                                <small>Your sitemap will be available at: <code>/sitemap.xml</code></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Social Media Settings -->
+                <div class="tab-pane fade" id="social">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Social Media Links</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">Facebook</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-facebook-f"></i></span>
+                                    <input type="url" class="form-control" name="social_facebook" 
+                                           value="{{ settings.SOCIAL_FACEBOOK }}" placeholder="https://facebook.com/yourpage">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Instagram</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-instagram"></i></span>
+                                    <input type="url" class="form-control" name="social_instagram" 
+                                           value="{{ settings.SOCIAL_INSTAGRAM }}" placeholder="https://instagram.com/yourprofile">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Twitter</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                    <input type="url" class="form-control" name="social_twitter" 
+                                           value="{{ settings.SOCIAL_TWITTER }}" placeholder="https://twitter.com/yourhandle">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Pinterest</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-pinterest-p"></i></span>
+                                    <input type="url" class="form-control" name="social_pinterest" 
+                                           value="{{ settings.SOCIAL_PINTEREST }}" placeholder="https://pinterest.com/yourprofile">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">YouTube</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-youtube"></i></span>
+                                    <input type="url" class="form-control" name="social_youtube" 
+                                           value="{{ settings.SOCIAL_YOUTUBE }}" placeholder="https://youtube.com/yourchannel">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">TikTok</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fab fa-tiktok"></i></span>
+                                    <input type="url" class="form-control" name="social_tiktok" 
+                                           value="{{ settings.SOCIAL_TIKTOK }}" placeholder="https://tiktok.com/@yourusername">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Social Sharing</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="social_sharing_buttons" 
+                                       id="socialSharingButtons" {% if settings.SOCIAL_SHARING_BUTTONS %}checked{% endif %}>
+                                <label class="form-check-label" for="socialSharingButtons">Show Social Sharing Buttons</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="social_share_product" 
+                                       id="socialShareProduct" {% if settings.SOCIAL_SHARE_PRODUCT %}checked{% endif %}>
+                                <label class="form-check-label" for="socialShareProduct">Enable Product Sharing</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" name="social_share_blog" 
+                                       id="socialShareBlog" {% if settings.SOCIAL_SHARE_BLOG %}checked{% endif %}>
+                                <label class="form-check-label" for="socialShareBlog">Enable Blog Post Sharing</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danger Zone -->
+                <div class="tab-pane fade" id="danger">
+                    <div class="card border-danger">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">Danger Zone</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                <h6><i class="fas fa-exclamation-triangle me-2"></i>Warning</h6>
+                                <p class="mb-0">These options are irreversible. Please proceed with caution.</p>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Reset All Settings</h6>
+                                <p>This will reset all settings to their default values. This action cannot be undone.</p>
+                                <button type="button" class="btn btn-outline-danger" id="resetSettingsBtn">
+                                    <i class="fas fa-undo me-2"></i>Reset to Defaults
+                                </button>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Clear Cache</h6>
+                                <p>Clear all cached data including templates, database queries, and sessions.</p>
+                                <button type="button" class="btn btn-outline-warning" id="clearCacheBtn">
+                                    <i class="fas fa-broom me-2"></i>Clear Cache
+                                </button>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Export Settings</h6>
+                                <p>Download a backup of your current settings as a JSON file.</p>
+                                <a href="{% url 'admin_dashboard:settings_export' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-file-export me-2"></i>Export Settings
+                                </a>
+                            </div>
+
+                            <div class="mb-4">
+                                <h6>Import Settings</h6>
+                                <p>Import settings from a previously exported JSON file.</p>
+                                <div class="input-group" style="max-width: 400px;">
+                                    <input type="file" class="form-control" id="importSettingsFile" accept=".json">
+                                    <button class="btn btn-outline-primary" type="button" id="importSettingsBtn">
+                                        <i class="fas fa-file-import me-2"></i>Import
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <button type="button" class="btn btn-secondary" id="resetFormBtn">
+                    <i class="fas fa-undo me-2"></i>Reset Changes
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Email Template Modal -->
+<div class="modal fade" id="emailTemplateModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateModalTitle">Edit Email Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="emailTemplateForm">
+                    <input type="hidden" name="template_id" id="templateId">
+                    <div class="mb-3">
+                        <label class="form-label">Subject</label>
+                        <input type="text" class="form-control" id="templateSubject" name="subject" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Content</label>
+                        <textarea class="form-control" id="templateContent" name="content" rows="10" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Available Variables</label>
+                        <div id="templateVariables" class="d-flex flex-wrap gap-2 mb-3"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="saveTemplateBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Image preview function
+function previewImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    const file = input.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        preview.src = e.target.result;
+    }
+
+    if (file) {
+        reader.readAsDataURL(file);
+    }
+}
+
+// Toggle free shipping options
+document.getElementById('freeShipping').addEventListener('change', function() {
+    document.getElementById('freeShippingOptions').style.display = this.checked ? 'block' : 'none';
+});
+
+// Handle form reset
+document.getElementById('resetFormBtn').addEventListener('click', function() {
+    if (confirm('Are you sure you want to reset all changes?')) {
+        document.getElementById('settingsForm').reset();
+    }
+});
+
+// Handle settings reset
+document.getElementById('resetSettingsBtn').addEventListener('click', function() {
+    if (confirm('WARNING: This will reset all settings to their default values. This action cannot be undone. Are you sure?')) {
+        fetch('{% url "admin_dashboard:settings_action" "reset" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ confirm: true })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Settings have been reset to defaults.', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast('Failed to reset settings.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while resetting settings.', 'error');
+        });
+    }
+});
+
+// Handle cache clear
+document.getElementById('clearCacheBtn').addEventListener('click', function() {
+    if (confirm('Are you sure you want to clear all cache?')) {
+        fetch('{% url "admin_dashboard:settings_action" "clear_cache" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Cache has been cleared successfully.', 'success');
+            } else {
+                showToast('Failed to clear cache.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while clearing cache.', 'error');
+        });
+    }
+});
+
+// Handle settings import
+document.getElementById('importSettingsBtn').addEventListener('click', function() {
+    const fileInput = document.getElementById('importSettingsFile');
+    const file = fileInput.files[0];
+    
+    if (!file) {
+        showToast('Please select a file to import.', 'warning');
+        return;
+    }
+
+    if (confirm('WARNING: This will overwrite your current settings. Are you sure?')) {
+        const formData = new FormData();
+        formData.append('settings_file', file);
+
+        fetch('{% url "admin_dashboard:settings_action" "import" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Settings imported successfully.', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showToast(data.message || 'Failed to import settings.', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('An error occurred while importing settings.', 'error');
+        });
+    }
+});
+
+// Email template editing
+const emailTemplateModal = new bootstrap.Modal(document.getElementById('emailTemplateModal'));
+const emailTemplateForm = document.getElementById('emailTemplateForm');
+const templateVariables = {
+    '{{ site_name }}': 'The name of your website',
+    '{{ site_url }}': 'The URL of your website',
+    '{{ customer_name }}': 'The full name of the customer',
+    '{{ customer_email }}': 'The email address of the customer',
+    '{{ order_number }}': 'The order number',
+    '{{ order_total }}': 'The total amount of the order',
+    '{{ order_date }}': 'The date the order was placed',
+    '{{ tracking_number }}': 'The shipping tracking number',
+    '{{ tracking_url }}': 'The URL to track the shipment'
+};
+
+document.querySelectorAll('.edit-template').forEach(button => {
+    button.addEventListener('click', function() {
+        const templateId = this.getAttribute('data-id');
+        // In a real implementation, you would fetch the template data via AJAX
+        // For now, we'll use placeholder data
+        document.getElementById('templateId').value = templateId;
+        document.getElementById('templateSubject').value = 'Order Confirmation #12345';
+        document.getElementById('templateContent').value = `Hello {{ customer_name }},\n\nThank you for your order #{{ order_number }}.\n\nOrder Total: {{ order_total }}\n\nWe'll notify you once your order ships.\n\nBest regards,\n{{ site_name }} Team`;
+        
+        // Populate variables
+        const variablesContainer = document.getElementById('templateVariables');
+        variablesContainer.innerHTML = '';
+        
+        Object.entries(templateVariables).forEach(([variable, description]) => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-light text-dark border';
+            badge.style.cursor = 'pointer';
+            badge.title = description;
+            badge.textContent = variable;
+            badge.addEventListener('click', function() {
+                const content = document.getElementById('templateContent');
+                const start = content.selectionStart;
+                const end = content.selectionEnd;
+                const text = content.value;
+                const before = text.substring(0, start);
+                const after = text.substring(end, text.length);
+                
+                content.value = before + variable + after;
+                content.focus();
+                content.selectionStart = content.selectionEnd = start + variable.length;
+            });
+            variablesContainer.appendChild(badge);
+        });
+        
+        emailTemplateModal.show();
+    });
+});
+
+document.getElementById('saveTemplateBtn').addEventListener('click', function() {
+    // In a real implementation, you would save the template via AJAX
+    const formData = new FormData(emailTemplateForm);
+    console.log('Saving template:', Object.fromEntries(formData));
+    
+    // Simulate API call
+    setTimeout(() => {
+        showToast('Template saved successfully.', 'success');
+        emailTemplateModal.hide();
+    }, 500);
+});
+
+// Show toast notifications
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-white bg-${type === 'success' ? 'success' : 'danger'} border-0 position-fixed bottom-0 end-0 m-3`;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'assertive');
+    toast.setAttribute('aria-atomic', 'true');
+    toast.style.zIndex = '1090';
+    
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    // Remove toast after it's hidden
+    toast.addEventListener('hidden.bs.toast', function() {
+        document.body.removeChild(toast);
+    });
+}
+
+// Initialize tooltips
+document.addEventListener('DOMContentLoaded', function() {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

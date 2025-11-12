@@ -1,29 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Product, Category } from '@/types/product';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { productsApi } from '@/lib/api';
 
-interface Category {
-  id: number;
-  name: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  image: string | null;
-  category: number | null;
-  created_at?: string;
-  updated_at?: string;
-}
 
 const ProductManagement = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,8 +39,9 @@ const ProductManagement = () => {
           productsApi.getProducts()
         ]);
         
+        // The response data is already typed as Category[]
         setCategories(categoriesResponse.data || []);
-        setProducts(productsResponse.data || []);
+        setProducts(productsResponse.data?.results || []);
       } catch (error) {
         console.error('Error fetching data:', error);
         toast({
@@ -95,8 +81,8 @@ const ProductManagement = () => {
     setSelectedProduct(product);
     setFormData({
       name: product.name,
-      description: product.description || '',
-      price: product.price.toString(),
+      description: product.description,
+      price: product.price,
       image: product.image || '',
       category: product.category?.toString() || ''
     });
@@ -115,10 +101,10 @@ const ProductManagement = () => {
     try {
       const newProduct = {
         name: formData.name,
-        description: formData.description || '',
-        price: parseFloat(formData.price),
+        description: formData.description,
+        price: formData.price,
         image: formData.image || null,
-        category: formData.category ? parseInt(formData.category) : null
+        category: formData.category ? Number(formData.category) : null
       };
 
       const response = await productsApi.createProduct(newProduct);
@@ -152,15 +138,15 @@ const ProductManagement = () => {
     try {
       const updatedProduct = {
         name: formData.name,
-        description: formData.description || '',
-        price: parseFloat(formData.price),
+        description: formData.description,
+        price: formData.price, 
         image: formData.image || null,
-        category: formData.category ? parseInt(formData.category) : null
+        category: formData.category ? Number(formData.category) : null
       };
 
-      const response = await productsApi.updateProduct(selectedProduct.id, updatedProduct);
+      const response = await productsApi.updateProduct(selectedProduct.id.toString(), updatedProduct);
       
-      setProducts(prev => prev.map(p => p.id === selectedProduct.id ? response.data : p));
+      setProducts(prev => prev.map(p => p.id === selectedProduct.id ? response.data as Product : p));
       setIsEditDialogOpen(false);
       setSelectedProduct(null);
       
@@ -281,7 +267,7 @@ const ProductManagement = () => {
                     <div className="text-sm text-gray-500">{getCategoryName(product.category)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">${product.price.toFixed(2)}</div>
+                    <div className="text-sm text-gray-900">${parseFloat(product.price).toFixed(2)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">

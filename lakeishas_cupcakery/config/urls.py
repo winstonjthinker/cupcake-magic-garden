@@ -18,9 +18,24 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
+from apps.admin_dashboard.views import WelcomeView
 import debug_toolbar
+
+# Custom admin site with our dashboard
+admin.site.site_header = "Lakeisha's Cupcakery Admin"
+admin.site.site_title = "Lakeisha's Cupcakery Admin Portal"
+admin.site.index_title = "Welcome to Lakeisha's Cupcakery Admin Portal"
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # Root URL - Welcome page
+    path('', WelcomeView.as_view(), name='welcome'),
+    
+    # Admin dashboard app
+    path('admin/', include('apps.admin_dashboard.urls', namespace='admin_dashboard')),
+    
+    # Original Django admin as fallback
+    path('admin/original/', admin.site.urls),
     
     # API endpoints
     path('api/auth/', include('apps.users.urls')),
@@ -35,8 +50,4 @@ urlpatterns = [
 # Serve media files in development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-    
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns
+    urlpatterns += [path('__debug__/', include(debug_toolbar.urls))]
