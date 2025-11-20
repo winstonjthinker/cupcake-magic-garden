@@ -13,6 +13,7 @@ const HeroImage = () => {
           <img 
             src="https://images.unsplash.com/photo-1486427944299-d1955d23e34d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80" 
             alt="Delicious Cupcakes" 
+            loading="lazy"
             className="rounded-2xl shadow-2xl max-w-full h-auto hover:shadow-cupcake-pink/50 transition-shadow duration-300"
           />
           
@@ -30,6 +31,7 @@ const HeroImage = () => {
             <img 
               src="https://images.unsplash.com/photo-1576618148400-f54bed99fcfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" 
               alt="Cupcake" 
+              loading="lazy"
               className="w-16 h-16 rounded-full object-cover animate-jelly-bounce"
             />
           </div>
@@ -40,6 +42,7 @@ const HeroImage = () => {
             <img 
               src="https://images.unsplash.com/photo-1614707267537-b85aaf00c4b7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=300&q=80" 
               alt="Cake" 
+              loading="lazy"
               className="w-16 h-16 rounded-full object-cover animate-jelly-bounce"
             />
           </div>
@@ -57,3 +60,4 @@ const HeroImage = () => {
 };
 
 export default HeroImage;
+
