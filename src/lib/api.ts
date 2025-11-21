@@ -66,7 +66,8 @@ export const productsApi = {
     return api.get<{ count: number; next: string | null; previous: string | null; results: Product[] }>('/products/', { params });
   },
   
-  getProduct: (slug: string) => api.get<Product>(`/products/${slug}/`),
+  // Product detail is public
+  getProduct: (slug: string) => publicApi.get<Product>(`/products/${slug}/`),
   
   createProduct: (data: Omit<Product, 'id' | 'created_at' | 'updated_at'>) => {
     const formData = new FormData();
@@ -104,7 +105,8 @@ export const productsApi = {
     });
   },
   deleteProduct: (id: number) => api.delete(`/products/${id}/`),
-  getCategories: () => api.get<Category[]>('/products/categories/'),
+  // Categories are public
+  getCategories: () => publicApi.get<Category[]>(`/products/categories/`),
 };
 
 export interface BlogPost {
@@ -146,8 +148,9 @@ export const contactApi = {
 };
 
 export const authApi = {
+  // Use publicApi for login/register to avoid credentialed CORS
   login: <T = any>(email: string, password: string) => 
-    api.post<T>('/auth/login/', { email, password }),
+    publicApi.post<T>('/auth/login/', { email, username: email, password }),
   
   register: <T = any>(data: {
     email: string;
@@ -155,7 +158,7 @@ export const authApi = {
     password2: string;
     first_name: string;
     last_name: string;
-  }) => api.post<T>('/auth/register/', data),
+  }) => publicApi.post<T>('/auth/register/', data),
   
   getProfile: <T = any>() => api.get<T>('/auth/profile/'),
   

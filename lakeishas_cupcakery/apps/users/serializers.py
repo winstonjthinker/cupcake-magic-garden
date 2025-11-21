@@ -54,8 +54,17 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         return user
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    """Custom token obtain serializer to include user data in the response"""
+    """Custom token obtain serializer to include user data in the response.
+    Accepts either 'email' or 'username' as the identifier, but uses email under the hood.
+    """
+    # Ensure SimpleJWT looks for 'email' as the identifier
+    username_field = get_user_model().USERNAME_FIELD
+
     def validate(self, attrs):
+        # Allow clients that send 'username' to authenticate with email
+        if 'email' not in attrs and 'username' in attrs:
+            attrs['email'] = attrs['username']
+
         data = super().validate(attrs)
         refresh = self.get_token(self.user)
         data['refresh'] = str(refresh)

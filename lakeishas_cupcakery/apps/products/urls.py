@@ -9,17 +9,23 @@ app_name = 'products'
 # Main router
 router = DefaultRouter()
 router.register(r'categories', views.CategoryViewSet, basename='category')
-router.register(r'products', views.ProductViewSet, basename='product')
+# Do not register ProductViewSet on the router to avoid /products/products/ prefix
 
 # Nested router for category products
 category_router = routers.NestedSimpleRouter(router, r'categories', lookup='category')
 category_router.register(r'products', views.CategoryProductViewSet, basename='category-products')
 
 urlpatterns = [
-    # Main API endpoints
+    # Expose products at /api/products/ directly
+    path('', views.ProductViewSet.as_view({'get': 'list', 'post': 'create'}), name='product-list'),
+
+    # Search endpoint (must be before slug)
+    path('search/', views.ProductSearchView.as_view(), name='product-search'),
+
+    # Main API endpoints (Categories)
     path('', include(router.urls)),
     path('', include(category_router.urls)),
-    
-    # Search endpoint (using a regular view)
-    path('search/', views.ProductSearchView.as_view(), name='product-search'),
+
+    # Product detail (catch-all slug) - must be last
+    path('<slug:slug>/', views.ProductViewSet.as_view({'get': 'retrieve', 'put': 'update', 'patch': 'partial_update', 'delete': 'destroy'}), name='product-detail'),
 ]

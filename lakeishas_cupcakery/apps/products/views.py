@@ -10,6 +10,8 @@ from django.shortcuts import get_object_or_404
 
 from .models import Product, Category
 from .serializers import ProductSerializer, CategorySerializer
+from .permissions import ProductsPermission
+from .authentication import SafeJWTAuthentication
 
 class CategoryViewSet(viewsets.ModelViewSet):
     """
@@ -55,7 +57,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     """
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
-    permission_classes = [permissions.AllowAny]  # Allow unauthenticated read access
+    # Public read (GET/HEAD/OPTIONS), admin-only writes
+    permission_classes = [ProductsPermission]
     lookup_field = 'slug'
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'is_featured', 'is_available']
@@ -63,13 +66,7 @@ class ProductViewSet(viewsets.ModelViewSet):
     ordering_fields = ['price', 'created_at', 'name']
     ordering = ['-created_at']
     
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [permissions.IsAdminUser()]
-        return [permissions.AllowAny()]
+    authentication_classes = [SafeJWTAuthentication]
 
     def get_queryset(self):
         """
@@ -86,14 +83,6 @@ class ProductViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(is_available=True)
             
         return queryset.select_related('category')
-    
-    def get_permissions(self):
-        """
-        Instantiates and returns the list of permissions that this view requires.
-        """
-        if self.action in ['create', 'update', 'partial_update', 'destroy']:
-            return [IsAdminUser()]
-        return [IsAuthenticatedOrReadOnly()]
     
     @action(detail=True, methods=['post'])
     def toggle_featured(self, request, slug=None):

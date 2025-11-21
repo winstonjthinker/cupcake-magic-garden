@@ -2,10 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import ProductCard from './ProductCard';
 import { useToast } from '@/hooks/use-toast';
-import axios from 'axios';
 import { Product } from '@/types/product';
-
-const API_URL = 'http://localhost:8000/api';
+import { productsApi } from '@/lib/api';
 
 const fallbackProducts: Product[] = [
   {
@@ -28,19 +26,14 @@ const ProductShowcase = () => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await axios.get<{ results: Product[] }>(
-          `${API_URL}/products/`,
-          { 
-            params: { 
-              is_featured: true,
-              is_available: true,
-              limit: 6
-            } 
-          }
-        );
+        const response = await productsApi.getProducts({
+          is_featured: true,
+          is_available: true,
+          limit: 6,
+        });
         
-        if (response.data && response.data.results) {
-          setProducts(response.data.results);
+        if (response.data && (response.data as any).results) {
+          setProducts((response.data as any).results);
         } else if (Array.isArray(response.data)) {
           // Handle case where the API returns an array directly
           setProducts(response.data);

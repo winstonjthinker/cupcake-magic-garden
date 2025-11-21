@@ -84,9 +84,9 @@ const { access, refresh } = data;
         localStorage.setItem('refresh_token', refresh);
       }
       
-      // Fetch the user profile to get complete user data
-      const profileResponse = await authApi.getProfile<{ data: User }>();
-      setUser(profileResponse.data.data);
+      // Fetch the user profile to get complete user data (backend returns user object directly)
+      const profileResponse = await authApi.getProfile<User>();
+      setUser(profileResponse.data as unknown as User);
     } catch (error: any) {
       console.error('Login error:', error);
       // Clear any partial auth state on error
@@ -126,8 +126,8 @@ const { access, refresh } = data;
       }
       
       // Fetch and set the user profile
-      const profileResponse = await authApi.getProfile<{ data: User }>();
-      setUser(profileResponse.data.data);
+      const profileResponse = await authApi.getProfile<User>();
+      setUser(profileResponse.data as unknown as User);
     } catch (error: any) {
       console.error('Registration error:', error);
       
