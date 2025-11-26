@@ -88,6 +88,9 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# Disallow wildcard and require explicit origins when using credentials
+CORS_ALLOW_ALL_ORIGINS = False
+
 # REST Framework settings
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
