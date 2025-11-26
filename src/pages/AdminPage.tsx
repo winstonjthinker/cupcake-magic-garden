@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -19,9 +19,9 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import ProductManagement from '@/components/admin/ProductManagement';
-import BlogManagement from '@/components/admin/BlogManagement';
-import AdminUserManagement from '@/components/admin/AdminUserManagement';
+const ProductManagement = lazy(() => import('@/components/admin/ProductManagement'));
+const BlogManagement = lazy(() => import('@/components/admin/BlogManagement'));
+const AdminUserManagement = lazy(() => import('@/components/admin/AdminUserManagement'));
 
 const AdminPage = () => {
   const navigate = useNavigate();
@@ -219,7 +219,9 @@ const AdminPage = () => {
                   <CardTitle>Product Management</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ProductManagement />
+                  <Suspense fallback={<div className="p-4">Loading product tools...</div>}>
+                    <ProductManagement />
+                  </Suspense>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -230,7 +232,9 @@ const AdminPage = () => {
                   <CardTitle>Blog Management</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <BlogManagement />
+                  <Suspense fallback={<div className="p-4">Loading blog tools...</div>}>
+                    <BlogManagement />
+                  </Suspense>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -241,7 +245,9 @@ const AdminPage = () => {
                   <CardTitle>Admin User Management</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <AdminUserManagement />
+                  <Suspense fallback={<div className="p-4">Loading admin users...</div>}>
+                    <AdminUserManagement />
+                  </Suspense>
                 </CardContent>
               </Card>
             </TabsContent>

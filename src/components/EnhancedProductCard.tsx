@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Instagram, Send, Heart } from 'lucide-react';
 
 interface ProductCardProps {
@@ -28,6 +28,7 @@ const EnhancedProductCard = ({
         <img 
           src={image} 
           alt={title} 
+          loading="lazy"
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
         <div className="absolute top-3 right-3 flex flex-col gap-2">
@@ -73,4 +74,4 @@ const EnhancedProductCard = ({
   );
 };
 
-export default EnhancedProductCard;
+export default memo(EnhancedProductCard);

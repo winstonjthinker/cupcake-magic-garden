@@ -12,6 +12,7 @@ python-jose[cryptography]>=3.3.0
 
 # Database
 psycopg2-binary>=2.9.9
+dj-database-url>=2.1.0
 
 # Email
 sendgrid>=6.11.0

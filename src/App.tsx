@@ -1,19 +1,21 @@
 
+import React, { Suspense, lazy } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import CategoryPage from "./pages/CategoryPage";
-import LoginPage from "./pages/LoginPage";
-import RegisterPage from "./pages/RegisterPage";
-import AdminPage from "./pages/AdminPage";
-import BlogPage from "./pages/BlogPage";
-import BlogArticlePage from "./pages/BlogArticlePage";
-import ContactPage from "./pages/ContactPage";
+
+const Index = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const LoginPage = lazy(() => import("./pages/LoginPage"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage"));
+const AdminPage = lazy(() => import("./pages/AdminPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const BlogArticlePage = lazy(() => import("./pages/BlogArticlePage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -70,35 +72,37 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/category/:categoryId" element={<CategoryPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/blog/:articleId" element={<BlogArticlePage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            
-            {/* Auth routes - only accessible when not logged in */}
-            <Route path="/login" element={
-              <PublicOnlyRoute>
-                <LoginPage />
-              </PublicOnlyRoute>
-            } />
-            <Route path="/register" element={
-              <PublicOnlyRoute>
-                <RegisterPage />
-              </PublicOnlyRoute>
-            } />
-            
-            {/* Admin routes */}
-            <Route element={<ProtectedRoute requiredRole="admin" />}>
-              <Route path="/admin" element={<AdminPage />} />
-              {/* Add more admin-only routes here */}
-            </Route>
-            
-            {/* 404 - Not Found */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<div style={{ padding: 24 }}>Loading...</div>}>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/category/:categoryId" element={<CategoryPage />} />
+              <Route path="/blog" element={<BlogPage />} />
+              <Route path="/blog/:articleId" element={<BlogArticlePage />} />
+              <Route path="/contact" element={<ContactPage />} />
+              
+              {/* Auth routes - only accessible when not logged in */}
+              <Route path="/login" element={
+                <PublicOnlyRoute>
+                  <LoginPage />
+                </PublicOnlyRoute>
+              } />
+              <Route path="/register" element={
+                <PublicOnlyRoute>
+                  <RegisterPage />
+                </PublicOnlyRoute>
+              } />
+              
+              {/* Admin routes */}
+              <Route element={<ProtectedRoute requiredRole="admin" />}>
+                <Route path="/admin" element={<AdminPage />} />
+                {/* Add more admin-only routes here */}
+              </Route>
+              
+              {/* 404 - Not Found */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
@@ -106,3 +110,4 @@ const App = () => (
 );
 
 export default App;
+

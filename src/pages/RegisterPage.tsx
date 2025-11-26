@@ -23,7 +23,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, register: registerUser } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -67,8 +67,7 @@ const RegisterPage = () => {
     try {
       setIsLoading(true);
       // The register function from AuthContext will handle the API call and update the auth state
-      const { register } = useAuth();
-      await register(formData);
+      await registerUser(formData);
       
       toast({
         title: 'Success!',

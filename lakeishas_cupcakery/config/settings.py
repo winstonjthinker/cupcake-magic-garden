@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'apps.products',
-    'apps.users',
+    'apps.users.apps.UsersConfig',
     'apps.blog',
     'apps.contact',
     'apps.newsletter',
@@ -87,6 +87,9 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+# Disallow wildcard and require explicit origins when using credentials
+CORS_ALLOW_ALL_ORIGINS = False
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -166,7 +169,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # Custom user model
-AUTH_USER_MODEL = 'apps.users.User'
+AUTH_USER_MODEL = 'users.User'
 
 
 # Internationalization
