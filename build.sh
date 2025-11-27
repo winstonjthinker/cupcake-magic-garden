@@ -2,11 +2,11 @@
 # Exit on error
 set -o errexit
 
-# Change to the Django project directory
-cd lakeishas_cupcakery
-
 # Install Python dependencies
-pip install -r requirements.txt
+pip install -r lakeishas_cupcakery/requirements.txt
+
+# Change to the Django project directory for management commands
+cd lakeishas_cupcakery
 
 # Run database migrations
 python manage.py migrate --noinput
