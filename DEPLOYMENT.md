@@ -47,7 +47,7 @@ Ensure all changes are committed and pushed to your GitHub repository.
    - **Root Directory:** Leave empty
    - **Runtime:** Python 3
    - **Build Command:** `./build.sh`
-   - **Start Command:** `cd lakeishas_cupcakery && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT`
+   - **Start Command:** `./start.sh`
    - **Plan:** Free
 
 ### 4. Add Environment Variables
