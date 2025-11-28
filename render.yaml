@@ -27,20 +27,6 @@ services:
         value: "https://cupcake-magic-garden.pages.dev,https://www.lakeishascupcakery.com"
       - key: CSRF_TRUSTED_ORIGINS
         value: "https://cupcake-magic-garden.pages.dev,https://www.lakeishascupcakery.com"
-      - key: ALLOWED_HOSTS
-        value: "cupcake-magic-garden-backend.onrender.com,www.lakeishascupcakery.com"
-      - key: SENDGRID_API_KEY
-        sync: false
-      - key: DEFAULT_FROM_EMAIL
-        value: "noreply@lakeishascupcakery.com"
-    buildCommand: "./build.sh"
-    startCommand: "./start.sh"
-    plan: free
-    numInstances: 1
-    healthCheckPath: "/api/"
-    regions:
-      - "iad1"
-    autoDeploy: true
 
 databases:
   - name: postgres
