@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+import vitePluginCompression from 'vite-plugin-compression';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -13,6 +14,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' &&
     componentTagger(),
+    vitePluginCompression(),
   ].filter(Boolean),
   resolve: {
     alias: {
@@ -32,7 +34,6 @@ export default defineConfig(({ mode }) => ({
             "@radix-ui/react-dialog",
             "@radix-ui/react-tooltip",
             "@radix-ui/react-tabs",
-            "lucide-react"
           ],
           charts: ["recharts"],
           data: ["@tanstack/react-query", "axios", "zod"],
