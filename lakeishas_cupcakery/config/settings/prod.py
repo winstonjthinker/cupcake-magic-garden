@@ -21,11 +21,18 @@ DATABASES = {
 }
 
 # CORS settings - parse from environment variable
-# CORS settings - parse from environment variable
 cors_origins = os.environ.get('CORS_ALLOWED_ORIGINS', '')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
 CORS_ALLOW_ALL_ORIGINS = False  # Must be False to use CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -37,8 +44,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
-# CSRF settings - parse from environment variable
 # CSRF settings - parse from environment variable
 csrf_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csrf_origins.split(',') if origin.strip()]
