@@ -24,6 +24,16 @@ DEBUG = os.environ.get("DEBUG", "False").lower() == "true"
 
 # Your backend domain on Render
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+RENDER_EXTERNAL_HOSTNAME = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if RENDER_EXTERNAL_HOSTNAME:
+    ALLOWED_HOSTS.append(RENDER_EXTERNAL_HOSTNAME)
+
+# Debugging DATABASE_URL
+db_url = os.environ.get("DATABASE_URL")
+if not db_url:
+    print("WARNING: DATABASE_URL environment variable is NOT set.")
+else:
+    print(f"DATABASE_URL is set (length: {len(db_url)})")
 
 # ------------------------------------------------------------
 # APPLICATIONS
