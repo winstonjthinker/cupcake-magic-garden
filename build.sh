@@ -9,7 +9,10 @@ pip install -r lakeishas_cupcakery/requirements.txt
 cd lakeishas_cupcakery
 
 # Run database migrations
+# Run database migrations
+echo "Starting database migrations..."
 python manage.py migrate --noinput
+echo "Database migrations completed."
 
 # Collect static files
 python manage.py collectstatic --noinput
