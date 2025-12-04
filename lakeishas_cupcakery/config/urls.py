@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
+from django.http import HttpResponse
 from apps.admin_dashboard.views import WelcomeView
 import debug_toolbar
 
@@ -28,6 +29,9 @@ admin.site.site_title = "Lakeisha's Cupcakery Admin Portal"
 admin.site.index_title = "Welcome to Lakeisha's Cupcakery Admin Portal"
 
 urlpatterns = [
+    # Health check
+    path('health/', lambda request: HttpResponse("OK")),
+
     # Root URL - Welcome page
     path('', WelcomeView.as_view(), name='welcome'),
     
