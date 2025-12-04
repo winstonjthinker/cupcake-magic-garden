@@ -1,4 +1,5 @@
 from .base import *
+print("LOADING config.settings.prod...")
 import os
 import dj_database_url
 

@@ -8,6 +8,9 @@ import os
 from datetime import timedelta
 import dj_database_url
 
+print("LOADING config.settings...")
+
+
 # ------------------------------------------------------------
 # BASE DIRECTORY
 # ------------------------------------------------------------

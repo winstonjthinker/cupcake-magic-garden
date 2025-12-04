@@ -1,4 +1,5 @@
 from .base import *
+print("LOADING config.settings.dev...")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
