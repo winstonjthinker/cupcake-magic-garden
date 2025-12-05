@@ -2,15 +2,11 @@ services:
   - type: web
     name: cupcake-magic-garden-backend
     runtime: python3
-    rootDir: lakeishas_cupcakery
     build:
       os: ubuntu22.04
       commands:
-        - pip install -r requirements.txt
-        - python manage.py collectstatic --noinput
-        - echo "Starting database migrations..."
-        - python manage.py migrate --noinput
-        - echo "Database migrations completed!"
+        - chmod +x ./build.sh
+        - ./build.sh
     envVars:
       - key: PYTHON_VERSION
         value: "3.9.0"
@@ -36,7 +32,7 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         value: "noreply@lakeishascupcakery.com"
-    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: "cd lakeishas_cupcakery && gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
     plan: free
     numInstances: 1
     healthCheckPath: "/health/"
